@@ -30,7 +30,7 @@ jobs:
             fi
           done < tests/success_etapa1.txt
           if [ $ERR_COUNT -gt 0 ]; then
-            echo "Failed. Total errors: $ERR_COUNT"
+            echo "$ERR_COUNT suites failed."
             exit 1
           fi
       - name: Clean up

@@ -2,9 +2,17 @@
 etapa1: target compile_scanner compile_main
 	gcc -o etapa1 target/lex.yy.o target/main.o
 
+# Run test step
+etapa1_test: target compile_scanner compile_test_main
+	gcc -o etapa1 target/lex.yy.o target/test_main.o
+
 # Compile main file
 compile_main:
 	gcc -c src/main.c -I include/ -o target/main.o
+
+# Compile test main file
+compile_test_main:
+	gcc -c tests/test_main.c -I include/ -o target/test_main.o
 
 # Compile scanner file
 compile_scanner: run_flex
