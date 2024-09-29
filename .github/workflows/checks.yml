@@ -10,7 +10,7 @@ on:
 
 jobs:
   success_etapa1:
-    name: [etapa1] success tests
+    name: (etapa1) success tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
