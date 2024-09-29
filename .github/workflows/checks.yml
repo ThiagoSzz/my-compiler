@@ -19,10 +19,13 @@ jobs:
         run: make
       - name: Run tests
         run: |
-          ./etapa1 < tests/success_etapa1.txt
-          if [ $? -eq 1 ] || [ $? -eq 2 ]; then
-            echo "Failed"
+          while IFS= read -r line; do
+          echo "$line" | ./etapa1
+          exit_code=$?
+          if [ $exit_code -eq 1 ] || [ $exit_code -eq 2 ]; then
+            echo "Failed: $line"
             exit 1
           fi
+          done < tests/success_etapa1.txt
       - name: Clean up
         run: make clean
