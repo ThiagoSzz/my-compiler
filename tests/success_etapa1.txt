@@ -33,6 +33,8 @@ i1
 _ident1fic4d0r
 identificador_123
 identificador_
+123.
+IDentificador
 0
 1
 12
