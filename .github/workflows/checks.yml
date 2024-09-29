@@ -1,4 +1,4 @@
-name: Build and Run Etapa1
+name: checks
 
 on:
   push:
@@ -9,8 +9,8 @@ on:
       - main
 
 jobs:
-  etapa1:
-    name: (etapa1) tests
+  success_etapa1:
+    name: etapa [1] success tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -19,7 +19,7 @@ jobs:
         run: make
       - name: Run tests
         run: |
-          ./etapa1 < input.txt
+          ./etapa1 < tests/success_etapa1.txt
           if [ $? -eq 1 ] || [ $? -eq 2 ]; then
             echo "Failed"
             exit 1
