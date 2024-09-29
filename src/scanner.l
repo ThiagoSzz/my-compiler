@@ -17,6 +17,8 @@
 "while" { return TK_PR_WHILE; }
 "return" { return TK_PR_RETURN; }
 
+[a-z_][a-z0-9_]* { return TK_IDENTIFICADOR; }
+
 "<=" { return TK_OC_LE; }
 ">=" { return TK_OC_GE; }
 "==" { return TK_OC_EQ; }
