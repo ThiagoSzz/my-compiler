@@ -1,0 +1,8 @@
+int float if else while return
+! * / % + - < > { } ( ) = , ;
+<= >= == != & |
+identificador iDENTIFICADOR iDENtifIcAdOr i _ _identificador identificador_ID identificador_
+0 1 12 123 1234 12345 123456
+0.0 1.2 1.23 .1 .12 0.1
+// this is a comment // and this is still a comment
+//this is a comment
