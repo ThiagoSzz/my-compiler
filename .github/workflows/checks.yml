@@ -20,25 +20,39 @@ jobs:
       - name: Run tests
         shell: bash
         run: |
-          ERR_COUNT=0
-          RED='\033[0;31m'
-          NC='\033[0m' # No Color
-          error_logs=()
-          while IFS= read -r line
-          do
-            output=$(echo "$line" | ./etapa1)
-            if echo "$output" | grep -q 'TK_ERRO'; then
-              ERR_COUNT=$(($ERR_COUNT + 1))
-              error_logs+=("Failed on $line | Output: $output")
-            fi
-          done < tests/success_etapa1.txt
-          if [ $ERR_COUNT -gt 0 ]; then
-            printf "\n"
-            for err_log in "${error_logs[@]}"; do
-              echo -e "${RED}$err_log${NC}"
-            done
-            echo -e "${RED}$ERR_COUNT suites failed.${NC}"
-            exit 1
-          fi
+          - name: Run tests
+            shell: bash
+            run: |
+              ERR_COUNT=0
+              SUCCESS_COUNT=0
+              RED='\033[0;31m'
+              GREEN='\033[0;32m'
+              NC='\033[0m' # No Color
+              error_logs=()
+              success_logs=()
+              while IFS= read -r line
+              do
+                output=$(echo "$line" | ./etapa1)
+                echo "$output"
+                if echo "$output" | grep -q 'TK_ERRO'; then
+                  ERR_COUNT=$(($ERR_COUNT + 1))
+                  error_logs+=("Failure on: $line, Output: $output")
+                else
+                  SUCCESS_COUNT=$(($SUCCESS_COUNT + 1))
+                  success_logs+=("Success on: $line")
+                fi
+              done < tests/success_etapa1.txt
+              printf "\n"
+              for success_log in "${success_logs[@]}"; do
+                echo -e "${GREEN}$success_log${NC}"
+              done
+              for err_log in "${error_logs[@]}"; do
+                echo -e "${RED}$err_log${NC}"
+              done
+              echo -e "${GREEN}$SUCCESS_COUNT suites passed${NC}"
+              if [ $ERR_COUNT -gt 0 ]; then
+                echo -e "${RED}$ERR_COUNT suites failed${NC}"
+                exit 1
+              fi
       - name: Clean up
         run: make clean
