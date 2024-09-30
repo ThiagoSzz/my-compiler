@@ -20,35 +20,34 @@ jobs:
       - name: Run tests
         shell: bash
         run: |
+          TOTAL_TESTS=0
           ERR_COUNT=0
           SUCCESS_COUNT=0
-          RED='\033[0;31m'
-          GREEN='\033[0;32m'
-          NC='\033[0m' # No Color
+          LIGHT_RED='\033[0;31m'
+          RED='\033[0;38;5;124m'
+          GREEN='\033[0;38;5;118m'
+          NC='\033[0m'
           error_logs=()
           success_logs=()
           while IFS= read -r line
           do
+            TOTAL_TESTS=$(($TOTAL_TESTS + 1))
             output=$(echo "$line" | ./etapa1)
             echo "$output"
             if echo "$output" | grep -q 'TK_ERRO'; then
               ERR_COUNT=$(($ERR_COUNT + 1))
-              error_logs+=("Failure on: $line, Output: $output")
+              error_logs+=("[failed] $output")
             else
               SUCCESS_COUNT=$(($SUCCESS_COUNT + 1))
-              success_logs+=("Success on: $line")
             fi
           done < tests/success_etapa1.txt
           printf "\n"
-          for success_log in "${success_logs[@]}"; do
-            echo -e "${GREEN}$success_log${NC}"
-          done
-          for err_log in "${error_logs[@]}"; do
-            echo -e "${RED}$err_log${NC}"
-          done
-          echo -e "${GREEN}$SUCCESS_COUNT suites passed${NC}"
+          echo -e "${NC}$TOTAL_TESTS total: ${GREEN}$SUCCESS_COUNT passed${NC}/${RED}$ERR_COUNT failed${NC}"
+          printf "\n"
           if [ $ERR_COUNT -gt 0 ]; then
-            echo -e "${RED}$ERR_COUNT suites failed${NC}"
+            for err_log in "${error_logs[@]}"; do
+              echo -e "${LIGHT_RED}$err_log${NC}"
+            done
             exit 1
           fi
       - name: Clean up
