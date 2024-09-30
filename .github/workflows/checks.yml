@@ -24,14 +24,14 @@ jobs:
           ERR_COUNT=0
           SUCCESS_COUNT=0
           RED='\033[0;31m'
-          GREEN='\033[0;38;5;118m'
-          NC='\033[0;38;5;240m'
+          GREEN='\033[0;32m'
+          NC='\033[0;38;5;250m'
           while IFS= read -r line
           do
             TOTAL_TESTS=$(($TOTAL_TESTS + 1))
             output=$(echo "$line" | ./etapa1)
             if echo "$output" | grep -q 'TK_ERRO'; then
-              echo "${RED}$output"
+              echo -e "${RED}$output"
               ERR_COUNT=$(($ERR_COUNT + 1))
             else
               echo "$output"
