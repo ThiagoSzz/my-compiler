@@ -27,6 +27,7 @@ jobs:
             echo "$output"
             if echo "$output" | grep -q 'TK_ERRO'; then
               ERR_COUNT=$(($ERR_COUNT + 1))
+              echo "$ERR_COUNT"
             fi
           done < tests/success_etapa1.txt
           if [ $ERR_COUNT -gt 0 ]; then
