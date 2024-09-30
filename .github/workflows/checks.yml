@@ -30,10 +30,9 @@ jobs:
           do
             TOTAL_TESTS=$(($TOTAL_TESTS + 1))
             output=$(echo "$line" | ./etapa1)
-            ERR_IN_LINE=$(echo "$output" | grep -o 'TK_ERRO' | wc -l)
-            if [ $ERR_IN_LINE -gt 0 ]; then
+            if echo "$output" | grep -q 'TK_ERRO'; then
               echo -e "${RED}FAIL ${NC}$output"
-              ERR_COUNT=$(($ERR_COUNT + $ERR_IN_LINE))
+              ERR_COUNT=$(($ERR_COUNT + 1))
             else
               echo "${GREEN}PASS ${NC}$output"
               SUCCESS_COUNT=$(($SUCCESS_COUNT + 1))
