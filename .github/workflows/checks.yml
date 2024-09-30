@@ -23,31 +23,23 @@ jobs:
           TOTAL_TESTS=0
           ERR_COUNT=0
           SUCCESS_COUNT=0
-          LIGHT_RED='\033[0;31m'
-          RED='\033[0;38;5;124m'
+          RED='\033[0;31m'
           GREEN='\033[0;38;5;118m'
-          NC='\033[0m'
-          error_logs=()
-          success_logs=()
+          NC='\033[0;38;5;240m'
           while IFS= read -r line
           do
             TOTAL_TESTS=$(($TOTAL_TESTS + 1))
             output=$(echo "$line" | ./etapa1)
-            echo "$output"
             if echo "$output" | grep -q 'TK_ERRO'; then
+              echo "${RED}$output"
               ERR_COUNT=$(($ERR_COUNT + 1))
-              error_logs+=("[failed] $output")
             else
+              echo "$output"
               SUCCESS_COUNT=$(($SUCCESS_COUNT + 1))
             fi
           done < tests/success_etapa1.txt
-          printf "\n"
-          echo -e "${NC}$TOTAL_TESTS total: ${GREEN}$SUCCESS_COUNT passed${NC}/${RED}$ERR_COUNT failed${NC}"
-          printf "\n"
+          echo -e "${NC}Tests: $TOTAL_TESTS total → ${GREEN}$SUCCESS_COUNT passed${NC}, ${RED}$ERR_COUNT failed${NC}"
           if [ $ERR_COUNT -gt 0 ]; then
-            for err_log in "${error_logs[@]}"; do
-              echo -e "${LIGHT_RED}$err_log${NC}"
-            done
             exit 1
           fi
       - name: Clean up
