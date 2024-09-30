@@ -20,19 +20,14 @@ jobs:
       - name: Run tests
         shell: bash
         run: |
-          ERR_COUNT=0
           while IFS= read -r line
           do
-            output=$(echo "$line" | ./etapa1)
-            echo "$output"
-            if echo "$output" | grep -q 'TK_ERRO'; then
-              ERR_COUNT=$(($ERR_COUNT + 1))
-              echo "$ERR_COUNT"
+            echo "$line" | ./etapa1
+            if [ $? -eq 1 ] || [ $? -eq 2 ]; then
+              echo "Failed on input: $line"
+              EXIT_CODE=1
             fi
           done < tests/success_etapa1.txt
-          if [ $ERR_COUNT -gt 0 ]; then
-            echo "$ERR_COUNT suites failed."
-            exit 1
-          fi
+          exit ${EXIT_CODE}
       - name: Clean up
         run: make clean
