@@ -16,12 +16,31 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
       - name: Build files
-        run: make
+        run: make etapa1_test
       - name: Run tests
+        shell: bash
         run: |
-          ./etapa1 < tests/success_etapa1.txt
-          if [ $? -eq 1 ] || [ $? -eq 2 ]; then
-            echo "Failed"
+          TOTAL_TESTS=0
+          ERR_COUNT=0
+          SUCCESS_COUNT=0
+          RED='\033[0;31m'
+          GREEN='\033[0;32m'
+          NC='\033[0;38;5;250m'
+          while IFS= read -r line
+          do
+            TOTAL_TESTS=$(($TOTAL_TESTS + 1))
+            output=$(echo "$line" | ./etapa1)
+            if echo "$output" | grep -q 'TK_ERRO'; then
+              echo -e "${RED}FAIL ${NC}$output"
+              ERR_COUNT=$(($ERR_COUNT + 1))
+            else
+              echo -e "${GREEN}PASS ${NC}$output"
+              SUCCESS_COUNT=$(($SUCCESS_COUNT + 1))
+            fi
+          done < tests/success_etapa1.txt
+          printf "\n"
+          echo -e "${NC}Tests: $TOTAL_TESTS total → ${GREEN}$SUCCESS_COUNT passed${NC}, ${RED}$ERR_COUNT failed${NC}"
+          if [ $ERR_COUNT -gt 0 ]; then
             exit 1
           fi
       - name: Clean up
