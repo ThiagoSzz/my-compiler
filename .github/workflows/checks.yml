@@ -34,10 +34,11 @@ jobs:
               echo -e "${RED}FAIL ${NC}$output"
               ERR_COUNT=$(($ERR_COUNT + 1))
             else
-              echo "${GREEN}PASS ${NC}$output"
+              echo -e "${GREEN}PASS ${NC}$output"
               SUCCESS_COUNT=$(($SUCCESS_COUNT + 1))
             fi
           done < tests/success_etapa1.txt
+          printf "\n"
           echo -e "${NC}Tests: $TOTAL_TESTS total → ${GREEN}$SUCCESS_COUNT passed${NC}, ${RED}$ERR_COUNT failed${NC}"
           if [ $ERR_COUNT -gt 0 ]; then
             exit 1
