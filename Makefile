@@ -1,4 +1,4 @@
-# Run main step
+# Run main step for etapa1
 etapa1: target compile_scanner compile_main
 	gcc -o etapa1 target/lex.yy.o target/main.o
 
@@ -6,7 +6,7 @@ etapa1: target compile_scanner compile_main
 etapa1_test: target compile_scanner compile_test_main
 	gcc -o etapa1 target/lex.yy.o target/test_main.o
 
-# Create deliverable etapa1
+# Create deliverable of etapa1
 etapa1_final:
 	mkdir -p etapa1
 	cp -r ./src ./etapa1
@@ -37,4 +37,4 @@ target:
 
 # Remove generated files and folders
 clean:
-	rm -rf target etapa1
+	rm -rf target etapa1 ./etapa1 etapa1.tgz
