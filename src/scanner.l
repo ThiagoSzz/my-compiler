@@ -21,7 +21,6 @@
 [0-9]+$ { return TK_LIT_INT; }
 
 [a-z_][a-z0-9_]* { return TK_IDENTIFICADOR; }
-[a-zA-Z_][a-zA-Z0-9_]* { return TK_ERRO; }
 
 "<="$ { return TK_OC_LE; }
 ">="$ { return TK_OC_GE; }
