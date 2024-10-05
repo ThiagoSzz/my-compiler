@@ -45,3 +45,15 @@ If you want to clean up your environment (delete `target` folder and executable)
 ```bash
 make clean
 ```
+
+### Generate deliverable file
+
+To build a deliverable file, you can use the following command:
+
+```bash
+make prod
+```
+
+This will move the relevant files from `src` and `include` folders, as well as the `Makefile.prod` file. Then it will compress the folder in the right format (e.g `etapa1.tgz`)
+
+To confirm that the generated deliverable works as expected, you can unzip the file and build using `make`.
