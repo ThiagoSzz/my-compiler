@@ -50,3 +50,17 @@ identificador_
 123.123
 //this is a comment that should be ignored // and this is still a comment
 //here's a small program to test the lexical analyzer
+123.4int
+123.4abcde
+123int
+123abcde
+int123.4
+abcde123.4
+int123.4
+abcde123.4
+<1
+<int
+int<
+1<
+ident!ficador
+int var = 1;
