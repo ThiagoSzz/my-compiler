@@ -1,0 +1,19 @@
+# Run main step for etapa1
+etapa1: compile_scanner compile_main
+	gcc -o etapa1 lex.yy.o main.o
+
+# Compile main file
+compile_main:
+	gcc -c main.c -o main.o
+
+# Compile scanner file
+compile_scanner: run_flex
+	gcc -c lex.yy.c -o lex.yy.o
+
+# Run flex to generate scanner
+run_flex:
+	flex -o lex.yy.c scanner.l
+
+# Remove generated files and folders
+clean:
+	rm -rf lex.yy.c *.o etapa1

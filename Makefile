@@ -7,11 +7,11 @@ etapa1_test: target compile_scanner compile_test_main
 	gcc -o etapa1 target/lex.yy.o target/test_main.o
 
 # Create deliverable of etapa1
-etapa1_final:
+prod:
 	mkdir -p etapa1
-	cp -r ./src ./etapa1
-	cp -r ./include ./etapa1
-	cp Makefile ./etapa1
+	cp src/* etapa1/
+	cp include/* etapa1/
+	cp Makefile.prod etapa1/Makefile
 	tar cvzf etapa1.tgz ./etapa1
 	rm -rf etapa1
 
