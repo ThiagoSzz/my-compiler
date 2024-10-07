@@ -29,21 +29,7 @@
 "&" { return TK_OC_AND; }
 "|" { return TK_OC_OR; }
 
-"!" { return '!'; }
-"*" { return '*'; }
-"/" { return '/'; }
-"%" { return '%'; }
-"+" { return '+'; }
-"-" { return '-'; }
-"<" { return '<'; }
-">" { return '>'; }
-"{" { return '{'; }
-"}" { return '}'; }
-"(" { return '('; }
-")" { return ')'; }
-"=" { return '='; }
-"," { return ','; }
-";" { return ';'; }
+[!|*|/|%|+|\-|<|>|{|}|(|)|=|,|;] { return yytext[0]; }
 
 \n { }
 [ \t] { }
