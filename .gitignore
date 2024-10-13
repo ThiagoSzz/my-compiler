@@ -4,3 +4,4 @@ etapa[0-9]
 *.o
 *.tab.*
 *.yy.c
+.vscode/
