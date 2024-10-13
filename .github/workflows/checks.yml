@@ -9,14 +9,14 @@ on:
       - main
 
 jobs:
-  success_etapa1:
-    name: (etapa1) success tests
+  tests:
+    name: tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
       - name: Build files
-        run: make etapa1_test
+        run: make
       - name: Run tests
         shell: bash
         run: |
