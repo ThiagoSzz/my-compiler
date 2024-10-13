@@ -27,24 +27,34 @@
 
 %%
 
+/* >> Program Rules << */
 program: ;
 program: rules;
 
-rules: rules inline_command;
-rules: inline_command;
+rules: rules inline_command ';';
+rules: inline_command ';';
+
 
 /* >> Single Line Commands << */
-inline_command: variable_declaration ';';
+inline_command: variable_declaration;
+inline_command: variable_assignment;
+
 
 /* >> Types << */
 type: 
     TK_PR_INT;
   | TK_PR_FLOAT;
 
+
 /* >> Literals << */
 literal: 
     TK_LIT_INT;
   | TK_LIT_FLOAT;
+
+
+/* >> Expressions (TBD) << */
+expression: ;
+
 
 /* >> Variable Declaration << */
 variable_declaration: type var_dec_rules;
@@ -54,6 +64,10 @@ var_dec_rules:
 var_dec_expression:
     TK_IDENTIFICADOR TK_OC_LE literal;
   | TK_IDENTIFICADOR;
+
+
+/* >> Variable Assignment << */
+variable_assignment: TK_IDENTIFICADOR '=' expression;
 
 %%
 
