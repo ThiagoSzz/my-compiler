@@ -38,6 +38,7 @@ rules: inline_command ';';
 /* >> Single Line Commands << */
 inline_command: variable_declaration;
 inline_command: variable_assignment;
+inline_command: function_call;
 
 
 /* >> Types << */
@@ -68,6 +69,13 @@ var_dec_expression:
 
 /* >> Variable Assignment << */
 variable_assignment: TK_IDENTIFICADOR '=' expression;
+
+
+/* >> Function call << */
+function_call: TK_IDENTIFICADOR '(' func_call_argument ')';
+func_call_argument:
+    expression;
+  | func_call_argument ',' expression;
 
 %%
 
