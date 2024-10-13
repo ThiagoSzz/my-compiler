@@ -1,11 +1,8 @@
 %{
-  #include "tokens.h"
-
-  int get_line_number(void) {
-    return yylineno;
-  }
+  #include "parser.tab.h"
 %}
 
+%option noyywrap
 %option yylineno
 
 %%
@@ -39,6 +36,6 @@
 
 %%
 
-int yywrap() {
-  return 1;
+int get_line_number(void) {
+  return yylineno;
 }

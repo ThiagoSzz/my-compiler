@@ -1,40 +1,16 @@
-# Run main step for etapa1
-etapa1: target compile_scanner compile_main
-	gcc -o etapa1 target/lex.yy.o target/main.o
+all: bison flex main
+	gcc main.o lex.yy.o parser.tab.o -o etapa2
 
-# Run test step
-etapa1_test: target compile_scanner compile_test_main
-	gcc -o etapa1 target/lex.yy.o target/test_main.o
+bison:
+	bison -d parser.y -Wcounterexamples
+	gcc -c parser.tab.c
 
-# Create deliverable of etapa1
-prod:
-	mkdir -p etapa1
-	cp src/* etapa1/
-	cp include/* etapa1/
-	cp Makefile.prod etapa1/Makefile
-	tar cvzf etapa1.tgz ./etapa1
-	rm -rf etapa1
+flex:
+	flex scanner.l
+	gcc -c lex.yy.c
 
-# Compile main file
-compile_main:
-	gcc -c src/main.c -I include/ -o target/main.o
+main:
+	gcc -c main.c -o main.o
 
-# Compile test main file
-compile_test_main:
-	gcc -c tests/test_main.c -I include/ -o target/test_main.o
-
-# Compile scanner file
-compile_scanner: run_flex
-	gcc -c target/lex.yy.c -I include/ -o target/lex.yy.o
-
-# Run flex to generate scanner
-run_flex:
-	flex -o target/lex.yy.c src/scanner.l
-
-# Create target directory
-target:
-	mkdir -p target
-
-# Remove generated files and folders
 clean:
-	rm -rf target etapa1 ./etapa1 etapa1.tgz
+	rm -f etapa2 *.o lex.yy.c parser.tab.c parser.tab.h etapa2.tgz
