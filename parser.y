@@ -31,8 +31,10 @@
 program: ;
 program: rules;
 
-rules: rules inline_command ';';
-rules: inline_command ';';
+end_of_statement: ';';
+
+rules: rules inline_command end_of_statement;
+rules: inline_command end_of_statement;
 
 
 /* >> Single Line Commands << */
@@ -40,6 +42,7 @@ inline_command: variable_declaration;
 inline_command: variable_assignment;
 inline_command: function_call;
 inline_command: return_command;
+inline_command: flow_control_statements;
 
 
 /* >> Types << */
@@ -56,6 +59,16 @@ literal:
 
 /* >> Expressions (TBD) << */
 expression: ;
+
+
+/* >> Command Block << */
+command_block: block_rules;
+block_rules: 
+    '{' block_expressions '}';
+  | '{' '}'
+block_expressions:
+    block_expressions expression end_of_statement
+  | expression end_of_statement;
 
 
 /* >> Variable Declaration << */
@@ -81,6 +94,14 @@ func_call_argument:
 
 /* >> Return command << */
 return_command: TK_PR_RETURN expression;
+
+
+/* >> Flow control statements << */
+flow_control_statements: flow_ctrl_rules;
+flow_ctrl_rules: 
+    TK_PR_IF '(' expression ')' command_block
+  | flow_ctrl_rules TK_PR_ELSE command_block;
+
 
 %%
 
