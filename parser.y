@@ -98,9 +98,13 @@ return_command: TK_PR_RETURN expression;
 
 /* >> Flow control statements << */
 flow_control_statements: flow_ctrl_rules;
-flow_ctrl_rules: 
-    TK_PR_IF '(' expression ')' command_block
-  | flow_ctrl_rules TK_PR_ELSE command_block;
+flow_ctrl_rules:
+    if_else_statement;
+  | while_statement;
+if_else_statement: 
+    TK_PR_IF '(' expression ')' command_block;
+  | if_else_statement TK_PR_ELSE command_block;
+while_statement: TK_PR_WHILE '(' expression ')' command_block;
 
 
 %%
