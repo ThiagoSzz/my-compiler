@@ -27,7 +27,7 @@
 
 %%
 
-/* >> Program Rules << */
+/* -->> Program Rules <<-- */
 program: 
   rules;
   | ;
@@ -39,7 +39,7 @@ rules:
   | inline_command end_of_statement;
 
 
-/* >> Single Line Commands << */
+/* -->> Single Line Commands <<-- */
 inline_command: 
   variable_declaration;
   | variable_assignment;
@@ -48,19 +48,19 @@ inline_command:
   | flow_control_statements;
 
 
-/* >> Types << */
+/* -->> Types <<-- */
 type: 
   TK_PR_INT;
   | TK_PR_FLOAT;
 
 
-/* >> Literals << */
+/* -->> Literals <<-- */
 literal: 
   TK_LIT_INT;
   | TK_LIT_FLOAT;
 
 
-/* >> Expressions << */
+/* -->> Expressions <<-- */
 expression: precedence_8_operators;
 
 precedence_8_operators:
@@ -114,7 +114,7 @@ operand:
   | '(' expression ')';
 
 
-/* >> Command Block (TBD) << */
+/* -->> Command Block (TBD) <<-- */
 command_block: 
   '{' block_expressions '}';
   | '{' '}';
@@ -124,37 +124,37 @@ block_expressions:
   | expression end_of_statement;
 
 
-/* >> Variable Declaration << */
-variable_declaration: type var_dec_rules;
+/* -->> Variable Declaration <<-- */
+variable_declaration: type variable_declaration_rules;
 
-var_dec_rules:
-  var_dec_rules ',' var_dec_expression;
-  | var_dec_expression;
+variable_declaration_rules:
+  variable_declaration_rules ',' variable_declaration_statement;
+  | variable_declaration_statement;
 
-var_dec_expression:
+variable_declaration_statement:
   TK_IDENTIFICADOR TK_OC_LE literal;
   | TK_IDENTIFICADOR;
 
 
-/* >> Variable Assignment << */
+/* -->> Variable Assignment <<-- */
 variable_assignment: TK_IDENTIFICADOR '=' expression;
 
 
-/* >> Function call << */
+/* -->> Function call <<-- */
 function_call: 
-  TK_IDENTIFICADOR '(' func_call_argument ')';
+  TK_IDENTIFICADOR '(' function_call_argument ')';
   | TK_IDENTIFICADOR '(' ')';
 
-func_call_argument:
+function_call_argument:
   expression;
-  | func_call_argument ',' expression;
+  | function_call_argument ',' expression;
 
 
-/* >> Return command << */
+/* -->> Return command <<-- */
 return_command: TK_PR_RETURN expression;
 
 
-/* >> Flow control statements << */
+/* -->> Flow control statements <<-- */
 flow_control_statements:
   if_else_statement;
   | while_statement;
