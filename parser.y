@@ -39,6 +39,7 @@ rules: inline_command ';';
 inline_command: variable_declaration;
 inline_command: variable_assignment;
 inline_command: function_call;
+inline_command: return_command;
 
 
 /* >> Types << */
@@ -76,6 +77,10 @@ function_call: TK_IDENTIFICADOR '(' func_call_argument ')';
 func_call_argument:
     expression;
   | func_call_argument ',' expression;
+
+
+/* >> Return command << */
+return_command: TK_PR_RETURN expression;
 
 %%
 
