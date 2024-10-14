@@ -28,56 +28,111 @@
 %%
 
 /* >> Program Rules << */
-program: ;
-program: rules;
+program: 
+  rules;
+  | ;
 
 end_of_statement: ';';
 
-rules: rules inline_command end_of_statement;
-rules: inline_command end_of_statement;
+rules: 
+  rules inline_command end_of_statement;
+  | inline_command end_of_statement;
 
 
 /* >> Single Line Commands << */
-inline_command: variable_declaration;
-inline_command: variable_assignment;
-inline_command: function_call;
-inline_command: return_command;
-inline_command: flow_control_statements;
+inline_command: 
+  variable_declaration;
+  | variable_assignment;
+  | function_call;
+  | return_command;
+  | flow_control_statements;
 
 
 /* >> Types << */
 type: 
-    TK_PR_INT;
+  TK_PR_INT;
   | TK_PR_FLOAT;
 
 
 /* >> Literals << */
 literal: 
-    TK_LIT_INT;
+  TK_LIT_INT;
   | TK_LIT_FLOAT;
 
 
-/* >> Expressions (TBD) << */
-expression: ;
+/* >> Expressions << */
+expression: precedence_8_operators;
+
+precedence_8_operators:
+  precedence_8_operators TK_OC_OR precedence_7_operators;
+  | precedence_7_operators;
+
+precedence_7_operators:
+  precedence_7_operators TK_OC_AND precedence_6_operators;
+  | precedence_6_operators;
+
+precedence_6_operators:
+  precedence_6_operators TK_OC_EQ precedence_5_operators;
+  | precedence_6_operators TK_OC_NE precedence_5_operators;
+  | precedence_5_operators;
+
+precedence_5_operators:
+  precedence_5_operators '<' precedence_4_operators;
+  | precedence_5_operators '>' precedence_4_operators;
+  | precedence_5_operators TK_OC_LE precedence_4_operators;
+  | precedence_5_operators TK_OC_GE precedence_4_operators;
+  | precedence_4_operators;
+
+precedence_4_operators:
+  precedence_4_operators '+' precedence_3_operators;
+  | precedence_4_operators '-' precedence_3_operators;
+  | precedence_3_operators;
+
+precedence_3_operators:
+  precedence_3_operators '*' precedence_2_operators;
+  | precedence_3_operators '/' precedence_2_operators;
+  | precedence_3_operators '%' precedence_2_operators;
+  | precedence_2_operators;
+
+precedence_2_operators:
+  precedence_1_minus_operator operand;
+  | precedence_1_negation_operator operand;
+  | operand;
+
+precedence_1_minus_operator:
+  precedence_1_minus_operator '-';
+  | '-';
+
+precedence_1_negation_operator:
+  precedence_1_negation_operator '!';
+  | '!';
+
+operand:
+  TK_IDENTIFICADOR;
+  | literal;
+  | function_call;
+  | '(' expression ')';
 
 
-/* >> Command Block << */
-command_block: block_rules;
-block_rules: 
-    '{' block_expressions '}';
-  | '{' '}'
+/* >> Command Block (TBD) << */
+command_block: 
+  '{' block_expressions '}';
+  | '{' '}';
+
 block_expressions:
-    block_expressions expression end_of_statement
+  block_expressions expression end_of_statement
   | expression end_of_statement;
 
 
 /* >> Variable Declaration << */
 variable_declaration: type var_dec_rules;
+
 var_dec_rules:
-    var_dec_rules ',' var_dec_expression;
+  var_dec_rules ',' var_dec_expression;
   | var_dec_expression;
+
 var_dec_expression:
-    TK_IDENTIFICADOR TK_OC_LE literal;
+  TK_IDENTIFICADOR TK_OC_LE literal;
   | TK_IDENTIFICADOR;
 
 
@@ -86,9 +141,12 @@ variable_assignment: TK_IDENTIFICADOR '=' expression;
 
 
 /* >> Function call << */
-function_call: TK_IDENTIFICADOR '(' func_call_argument ')';
+function_call: 
+  TK_IDENTIFICADOR '(' func_call_argument ')';
+  | TK_IDENTIFICADOR '(' ')';
+
 func_call_argument:
-    expression;
+  expression;
   | func_call_argument ',' expression;
 
 
@@ -97,13 +155,14 @@ return_command: TK_PR_RETURN expression;
 
 
 /* >> Flow control statements << */
-flow_control_statements: flow_ctrl_rules;
-flow_ctrl_rules:
-    if_else_statement;
+flow_control_statements:
+  if_else_statement;
   | while_statement;
+
 if_else_statement: 
-    TK_PR_IF '(' expression ')' command_block;
+  TK_PR_IF '(' expression ')' command_block;
   | if_else_statement TK_PR_ELSE command_block;
+
 while_statement: TK_PR_WHILE '(' expression ')' command_block;
 
 
