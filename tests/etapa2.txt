@@ -1,7 +1,35 @@
-int a;
-int a, b;
-int a <= 2;
-int a <= 2, b;
-int a <= 2, b <= 2;
-int a,b,c<=2;
-int a, b <=2, c;
+// function definition with parameters
+get_value_plus_one = value <- int > int {
+  // return command with expression
+  return value + 1;
+}
+
+// function definition without parameters
+main => int {
+  // variable declaration
+  int var_a <= 2;
+  int var_b, var_c <= 3;
+  float var_d <= 4.5;
+  float var_e;
+
+  // variable assignment with expression
+  var_b = !var_a * -var_c + var_d % var_a;
+
+  // variable assignment with forced precedence
+  var_e = (!var_a | (-var_b & (var_c == (var_d != 4.5))));
+
+  // flow control with if and else
+  if (var_b >= 5) {
+    var_d = var_d * 2;
+  } else {
+    var_d = var_d / 2;
+  };
+
+  // flow control with while
+  while (var_d <= 50) {
+    var_d = get_value_plus_one(var_d);
+  };
+
+  // return command with literal
+  return 0;
+}
