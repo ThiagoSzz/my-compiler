@@ -10,7 +10,7 @@ flex:
 	gcc -c lex.yy.c
 
 main:
-	gcc -c main.c -o main.o
+	gcc -c main.c
 
 clean:
-	rm -f etapa2 *.o lex.yy.c parser.tab.c parser.tab.h etapa2.tgz
+	rm -f *.o *.yy.* *.tab.* etapa2
