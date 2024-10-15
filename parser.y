@@ -27,40 +27,105 @@
 
 %%
 
-/* -->> Program Rules <<-- */
-program: 
-  rules;
+///////////////////////////////
+/* -->>     Program     <<-- */
+///////////////////////////////
+
+program:
+  list_of_functions;
   | ;
 
-end_of_statement: ';';
+list_of_functions:
+  list_of_functions function;
+  | function;
 
-rules: 
-  rules inline_command end_of_statement;
-  | inline_command end_of_statement;
+///////////////////////////////
+/* -->>     Function    <<-- */
+///////////////////////////////
 
+function: function_signature function_body;
 
-/* -->> Single Line Commands <<-- */
-inline_command: 
-  variable_declaration;
-  | variable_assignment;
-  | function_call;
-  | return_command;
-  | flow_control_statements;
+function_signature: TK_IDENTIFICADOR '=' list_of_parameters '>' type;
 
+list_of_parameters:
+  list_of_parameters TK_OC_OR parameter;
+  | parameter;
+  | ;
 
-/* -->> Types <<-- */
+parameter: TK_IDENTIFICADOR '<''-' type;
+
+function_body: block;
+
+///////////////////////////////
+/* -->>  Command Block  <<-- */
+///////////////////////////////
+
+block: 
+  '{' commands '}';
+  | '{' '}';
+
+commands:
+  commands simple_command;
+  | simple_command;
+
+///////////////////////////////
+/* -->> Simple Commands <<-- */
+///////////////////////////////
+
+simple_command: 
+  variable_declaration end_of_command;
+  | variable_assignment end_of_command;
+  | flow_control_statements end_of_command;
+  | return_command end_of_command;
+  | block end_of_command;
+  | function_call end_of_command;
+
+end_of_command: ';';
+
 type: 
   TK_PR_INT;
   | TK_PR_FLOAT;
 
-
-/* -->> Literals <<-- */
 literal: 
   TK_LIT_INT;
   | TK_LIT_FLOAT;
 
+variable_declaration: type variable_list;
 
-/* -->> Expressions <<-- */
+variable_list:
+  variable_list ',' declaration;
+  | declaration;
+
+declaration:
+  TK_IDENTIFICADOR TK_OC_LE literal;
+  | TK_IDENTIFICADOR;
+
+variable_assignment: TK_IDENTIFICADOR '=' expression;
+
+function_call: 
+  TK_IDENTIFICADOR '(' list_of_arguments ')';
+  | TK_IDENTIFICADOR '(' ')';
+
+list_of_arguments:
+  list_of_arguments ',' expression;
+  | expression;
+
+return_command: TK_PR_RETURN expression;
+
+flow_control_statements:
+  if_else_statement;
+  | while_statement;
+
+if_else_statement: 
+  TK_PR_IF '(' expression ')' block;
+  | if_else_statement TK_PR_ELSE block;
+
+while_statement: TK_PR_WHILE '(' expression ')' block;
+
+///////////////////////////////
+/* -->>   Expressions   <<-- */
+///////////////////////////////
+
 expression: precedence_8_operators;
 
 precedence_8_operators:
@@ -113,58 +178,9 @@ operand:
   | function_call;
   | '(' expression ')';
 
-
-/* -->> Command Block (TBD) <<-- */
-command_block: 
-  '{' block_expressions '}';
-  | '{' '}';
-
-block_expressions:
-  block_expressions expression end_of_statement
-  | expression end_of_statement;
-
-
-/* -->> Variable Declaration <<-- */
-variable_declaration: type variable_declaration_rules;
-
-variable_declaration_rules:
-  variable_declaration_rules ',' variable_declaration_statement;
-  | variable_declaration_statement;
-
-variable_declaration_statement:
-  TK_IDENTIFICADOR TK_OC_LE literal;
-  | TK_IDENTIFICADOR;
-
-
-/* -->> Variable Assignment <<-- */
-variable_assignment: TK_IDENTIFICADOR '=' expression;
-
-
-/* -->> Function call <<-- */
-function_call: 
-  TK_IDENTIFICADOR '(' function_call_argument ')';
-  | TK_IDENTIFICADOR '(' ')';
-
-function_call_argument:
-  expression;
-  | function_call_argument ',' expression;
-
-
-/* -->> Return command <<-- */
-return_command: TK_PR_RETURN expression;
-
-
-/* -->> Flow control statements <<-- */
-flow_control_statements:
-  if_else_statement;
-  | while_statement;
-
-if_else_statement: 
-  TK_PR_IF '(' expression ')' command_block;
-  | if_else_statement TK_PR_ELSE command_block;
-
-while_statement: TK_PR_WHILE '(' expression ')' command_block;
-
+///////////////////////////////
+/* -->>   End Program   <<-- */
+///////////////////////////////
 
 %%
 
