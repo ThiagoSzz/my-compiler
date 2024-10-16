@@ -25,6 +25,22 @@ main => int {
     var_d = var_d / 2;
   };
 
+  // flow control with if
+  if (var_b >= 5) {
+    var_d = 50;
+  };
+
+  // flow control with nested ifs and elses
+  if (var_b > 2) {
+    if (var_c > 2) {
+      var_d = 100;
+    } else {
+      var_d = 200;
+    };
+  } else {
+    var_d = 300;
+  };
+
   // flow control with while
   while (var_d <= 50) {
     var_d = get_value_plus_one(var_d);

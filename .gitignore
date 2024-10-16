@@ -1,7 +1,8 @@
-# Ignore generated files
-/target/
-etapa[0-9]
+.vscode/
+
+etapa[0-9]*
+./etapa*
+
 *.o
 *.tab.*
-*.yy.c
-.vscode/
+*.yy.*

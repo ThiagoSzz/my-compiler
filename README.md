@@ -40,7 +40,7 @@ To run the program, execute the following command in terminal:
 ./etapaX
 ```
 > [!TIP]
-> You can run the program with an input file by using `./etapaX < <filename>` (e.g `./etapaX < input.txt`)
+> You can run the program with an input file by using `./etapaX < filename` (e.g `./etapaX < input.txt`)
 
 ### Clean
 
@@ -49,3 +49,13 @@ If you want to clean up your environment (delete generated files and executable)
 ```bash
 make clean
 ```
+
+### Create deliverable
+
+To generate the deliverable `etapaX.tgz` folder, run the following command:
+
+```bash
+make deliverable
+```
+
+This will move all important files to the `etapaX` directory and then compress it into `etapaX.tgz`. Then, unzip it wherever you want, open the terminal, navigate to the unzipped folder, run and execute using the previous steps.
