@@ -17,6 +17,7 @@ main:
 	gcc -c main.c
 
 deliverable:
+	make clean
 	mkdir etapa$(ETAPA)
 	cp ${DELIVERABLE_FILES} ./etapa$(ETAPA)
 	tar cvzf etapa$(ETAPA).tgz etapa$(ETAPA)
