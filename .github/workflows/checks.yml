@@ -40,10 +40,10 @@ jobs:
             ./etapa2 < "$filename"
 
             if [ "$?" -eq "$exit_code" ]; then
-              echo "${GREEN}PASS ${NC}$filename"
+              echo -e "${GREEN}PASS ${NC}$filename"
               SUCCESS_COUNT=$(($SUCCESS_COUNT + 1))
             else
-              echo "${RED}FAIL ${NC}$filename"
+              echo -e "${RED}FAIL ${NC}$filename"
               ERR_COUNT=$(($ERR_COUNT + 1))
               exit 1
             fi
