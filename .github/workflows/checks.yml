@@ -31,10 +31,8 @@ jobs:
             TOTAL_TESTS=$(($TOTAL_TESTS + 1))
             if grep -q '//FAIL' "$filename"; then
               expected="FAIL"
-              output_fail=true
             else
               expected="PASS"
-              output_fail=false
             fi
 
             output=$(./etapa2 < "$filename" || true)
