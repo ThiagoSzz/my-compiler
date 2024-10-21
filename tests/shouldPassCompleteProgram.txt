@@ -1,4 +1,4 @@
-//FAIL
+//PASS
 // function definition with parameters
 get_value_plus_one = value <- int > int {
   // return command with expression
