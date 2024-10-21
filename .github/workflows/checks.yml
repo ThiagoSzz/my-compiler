@@ -26,22 +26,30 @@ jobs:
           RED='\033[0;31m'
           GREEN='\033[0;32m'
           NC='\033[0;38;5;250m'
-          while IFS= read -r line
-          do
+
+          for filename in tests/*; do
             TOTAL_TESTS=$(($TOTAL_TESTS + 1))
-            output=$(echo "$line" | ./etapa2)
-            if echo "$output" | grep -q 'TK_ERRO'; then
-              echo -e "${RED}FAIL ${NC}$output"
-              ERR_COUNT=$(($ERR_COUNT + 1))
+            if grep -q '//FAIL' "$filename"; then
+              expected="FAIL"
+              exit_code="1"
             else
-              echo -e "${GREEN}PASS ${NC}$output"
-              SUCCESS_COUNT=$(($SUCCESS_COUNT + 1))
+              expected="PASS"
+              exit_code="0"
             fi
-          done < tests/etapa2.txt
+
+            ./etapa2 < "$filename"
+
+            if [ "$?" -eq "$exit_code" ]; then
+              echo "${GREEN}PASS ${NC}$filename"
+              SUCCESS_COUNT=$(($SUCCESS_COUNT + 1))
+            else
+              echo "${RED}FAIL ${NC}$filename"
+              ERR_COUNT=$(($ERR_COUNT + 1))
+              exit 1
+            fi
+          done
+
           printf "\n"
           echo -e "${NC}Tests: $TOTAL_TESTS total → ${GREEN}$SUCCESS_COUNT passed${NC}, ${RED}$ERR_COUNT failed${NC}"
-          if [ $ERR_COUNT -gt 0 ]; then
-            exit 1
-          fi
       - name: Clean up
         run: make clean
