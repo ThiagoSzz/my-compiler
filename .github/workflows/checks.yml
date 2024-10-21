@@ -37,17 +37,23 @@ jobs:
               exit_code="0"
             fi
 
-            ./etapa2 < "$filename" || echo -e "${RED}FAIL ${NC}$filename"
+            ./etapa2 < "$filename" > /dev/null || true
+            result=$?
 
-            if [ "$?" -eq "$exit_code" ]; then
+            if [ "$result" -eq "$exit_code" ]; then
               echo -e "${GREEN}PASS ${NC}$filename"
               SUCCESS_COUNT=$(($SUCCESS_COUNT + 1))
             else
+              echo -e "${RED}FAIL ${NC}$filename"
               ERR_COUNT=$(($ERR_COUNT + 1))
             fi
           done
 
           printf "\n"
           echo -e "${NC}Tests: $TOTAL_TESTS total → ${GREEN}$SUCCESS_COUNT passed${NC}, ${RED}$ERR_COUNT failed${NC}"
+
+          if (( ERR_COUNT > 0 )); then
+            exit 1
+          fi
       - name: Clean up
         run: make clean
