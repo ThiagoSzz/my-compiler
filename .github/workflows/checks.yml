@@ -37,7 +37,7 @@ jobs:
               exit_code="0"
             fi
 
-            ./etapa2 < "$filename" > /dev/null || true
+            ./etapa2 < "$filename" || true
             result=$?
 
             echo "$result $exit_code $filename"
