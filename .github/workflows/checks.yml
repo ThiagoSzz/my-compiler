@@ -40,6 +40,8 @@ jobs:
             ./etapa2 < "$filename" > /dev/null || true
             result=$?
 
+            echo "$result $exit_code $filename"
+
             if [ "$result" -eq "$exit_code" ]; then
               echo -e "${GREEN}PASS ${NC}$filename"
               SUCCESS_COUNT=$(($SUCCESS_COUNT + 1))
