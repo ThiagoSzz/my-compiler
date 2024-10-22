@@ -27,7 +27,7 @@ deliverable:
 	mkdir etapa$(ETAPA)
 	cp ${DELIVERABLE_FILES} ./etapa$(ETAPA)
 	tar cvzf etapa$(ETAPA).tgz etapa$(ETAPA)
-	rm -rf etapa$(ETAPA)
+	rm -rf ./etapa$(ETAPA)
 
 clean:
 	rm -rf *.o *.yy.* *.tab.* etapa$(ETAPA).* ./etapa$(ETAPA)
