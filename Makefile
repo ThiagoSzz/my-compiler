@@ -1,3 +1,9 @@
+# /*---------------------------*/
+# /* -->>     Grupo I     <<-- */
+# /*        Thiago Haab        */
+# /*      Henrique Vazatta     */
+# /*---------------------------*/
+
 ETAPA = 2
 DELIVERABLE_FILES = main.c parser.y scanner.l Makefile README.md
 
