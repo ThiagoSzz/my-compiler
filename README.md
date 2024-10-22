@@ -52,12 +52,8 @@ chmod +x run_tests.sh
 > [!NOTE]
 > This is only necessary for a linux-based OS/macOS
 
-After that, you can run the script:
+After that, you can run the script using:
 
-```bash
-./run_tests.sh
-```
-or
 ```bash
 sh run_tests.sh
 ```
