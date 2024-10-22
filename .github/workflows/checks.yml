@@ -26,7 +26,7 @@ jobs:
           RED='\033[0;31m'
           GREEN='\033[0;32m'
           NC='\033[0;38;5;250m'
-          NC_DARKER='\033[0;38;5;247m'
+          NC_DARKER='\033[0;38;5;244m'
 
           for filename in tests/*; do
             TOTAL_TESTS=$(($TOTAL_TESTS + 1))
