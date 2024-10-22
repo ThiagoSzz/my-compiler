@@ -18,4 +18,6 @@ jobs:
 
       - name: Run test script
         shell: bash
-        run: ./run_tests.sh
+        run: |
+          export TERM=xterm-color
+          ./run_tests.sh
