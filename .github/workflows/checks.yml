@@ -15,51 +15,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-      - name: Build files
-        run: make
-      - name: Run tests
+
+      - name: Run test script
         shell: bash
-        run: |
-          TOTAL_TESTS=0
-          ERR_COUNT=0
-          SUCCESS_COUNT=0
-          RED='\033[0;31m'
-          GREEN='\033[0;32m'
-          NC='\033[0;38;5;250m'
-          NC_DARKER='\033[0;38;5;244m'
-
-          for filename in tests/*; do
-            TOTAL_TESTS=$(($TOTAL_TESTS + 1))
-            if grep -q '//FAIL' "$filename"; then
-              expected="FAIL"
-            else
-              expected="PASS"
-            fi
-
-            output=$(./etapa2 < "$filename" || true)
-            if echo $output | grep -q "line"; then
-              actual="FAIL"
-            else
-              actual="PASS"
-            fi
-
-            trimmed_filename="${filename#tests/}"
-            trimmed_filename="${trimmed_filename%.txt}"
-
-            if { [ "$expected" = "PASS" ] && [ "$actual" = "PASS" ]; } || { [ "$expected" = "FAIL" ] && [ "$actual" = "FAIL" ]; }; then
-              echo -e "${GREEN}PASS ${NC}$trimmed_filename   ${NC_DARKER}(expected: $expected, actual: $actual)"
-              SUCCESS_COUNT=$(($SUCCESS_COUNT + 1))
-            else
-              echo -e "${RED}FAIL ${NC}$trimmed_filename   ${NC_DARKER}(expected: $expected, actual: $actual)"
-              ERR_COUNT=$(($ERR_COUNT + 1))
-            fi
-          done
-
-          printf "\n"
-          echo -e "${NC}Tests: $TOTAL_TESTS total → ${GREEN}$SUCCESS_COUNT passed${NC}, ${RED}$ERR_COUNT failed${NC}"
-
-          if (( ERR_COUNT > 0 )); then
-            exit 1
-          fi
-      - name: Clean up
-        run: make clean
+        run: ./run_tests.sh

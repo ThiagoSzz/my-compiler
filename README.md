@@ -24,7 +24,7 @@ Project for a compiler made for a C-like language using [flex](https://github.co
 
 ### Build
 
-To build this program, use `make`. First, navigate to the directory containing the Makefile, then run the following command:
+To build the compiler, use `make`. First, navigate to the directory containing the Makefile, then run the following command:
 
 ```bash
 make
@@ -34,13 +34,33 @@ make
 
 ### Run
 
-To run the program, execute the following command in terminal:
+To run the compiler, execute the following command in terminal:
 
 ```bash
 ./etapaX
 ```
 > [!TIP]
-> You can run the program with an input file by using `./etapaX < filename` (e.g `./etapaX < input.txt`)
+> You can run the compiler with an input file by using `./etapaX < filename` (e.g `./etapaX < input.txt`)
+
+### Test
+
+To test the compiler, you can use the `run_tests.sh` script. First, you will need to give executable permissions to it using:
+
+```bash
+chmod +x run_tests.sh
+```
+> [!NOTE]
+> This is only necessary for a linux-based OS/macOS
+
+After that, you can run the script:
+
+```bash
+./run_tests.sh
+```
+or
+```bash
+sh run_tests.sh
+```
 
 ### Clean
 
