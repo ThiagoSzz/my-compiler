@@ -35,7 +35,7 @@ jobs:
               expected="PASS"
             fi
 
-            output=$(./etapa2 < "$filename" || "FAIL")
+            output=$(./etapa2 < "$filename" || true)
             if echo $output | grep -q "line"; then
               actual="FAIL"
             else
