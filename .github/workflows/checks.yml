@@ -35,18 +35,21 @@ jobs:
               expected="PASS"
             fi
 
-            output=$(./etapa2 < "$filename" || true)
+            output=$(./etapa2 < "$filename" || "FAIL")
             if echo $output | grep -q "line"; then
-              error=true
+              actual="FAIL"
             else
-              error=false
+              actual="PASS"
             fi
 
-            if { [ "$expected" = "PASS" ] && [ "$error" = false ]; } || { [ "$expected" = "FAIL" ] && [ "$error" = true ]; }; then
-              echo -e "${GREEN}PASS ${NC}$filename"
+            trimmed_filename="${filename#tests/}"
+            trimmed_filename="${trimmed_filename%.txt}"
+
+            if { [ "$expected" = "PASS" ] && [ "$actual" = "PASS" ]; } || { [ "$expected" = "FAIL" ] && [ "$actual" = "FAIL" ]; }; then
+              echo -e "${GREEN}PASS ${NC}$trimmed_filename (expected: $expected, actual: $actual)"
               SUCCESS_COUNT=$(($SUCCESS_COUNT + 1))
             else
-              echo -e "${RED}FAIL ${NC}$filename"
+              echo -e "${RED}FAIL ${NC}$trimmed_filename (expected: $expected, actual: $actual)"
               ERR_COUNT=$(($ERR_COUNT + 1))
             fi
           done
