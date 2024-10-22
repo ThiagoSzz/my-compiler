@@ -1,40 +1,33 @@
-# Run main step for etapa1
-etapa1: target compile_scanner compile_main
-	gcc -o etapa1 target/lex.yy.o target/main.o
+# /*---------------------------*/
+# /* -->>     Grupo I     <<-- */
+# /*        Thiago Haab        */
+# /*      Henrique Vazatta     */
+# /*---------------------------*/
 
-# Run test step
-etapa1_test: target compile_scanner compile_test_main
-	gcc -o etapa1 target/lex.yy.o target/test_main.o
+ETAPA = 2
+DELIVERABLE_FILES = main.c parser.y scanner.l Makefile README.md
 
-# Create deliverable of etapa1
-prod:
-	mkdir -p etapa1
-	cp src/* etapa1/
-	cp include/* etapa1/
-	cp Makefile.prod etapa1/Makefile
-	tar cvzf etapa1.tgz ./etapa1
-	rm -rf etapa1
 
-# Compile main file
-compile_main:
-	gcc -c src/main.c -I include/ -o target/main.o
+all: bison flex main
+	gcc main.o lex.yy.o parser.tab.o -o etapa$(ETAPA)
 
-# Compile test main file
-compile_test_main:
-	gcc -c tests/test_main.c -I include/ -o target/test_main.o
+bison:
+	bison -d parser.y -Wcounterexamples
+	gcc -c parser.tab.c
 
-# Compile scanner file
-compile_scanner: run_flex
-	gcc -c target/lex.yy.c -I include/ -o target/lex.yy.o
+flex:
+	flex scanner.l
+	gcc -c lex.yy.c
 
-# Run flex to generate scanner
-run_flex:
-	flex -o target/lex.yy.c src/scanner.l
+main:
+	gcc -c main.c
 
-# Create target directory
-target:
-	mkdir -p target
+deliverable:
+	make clean
+	mkdir etapa$(ETAPA)
+	cp ${DELIVERABLE_FILES} ./etapa$(ETAPA)
+	tar cvzf etapa$(ETAPA).tgz etapa$(ETAPA)
+	rm -rf ./etapa$(ETAPA)
 
-# Remove generated files and folders
 clean:
-	rm -rf target etapa1 ./etapa1 etapa1.tgz
+	rm -rf *.o *.yy.* *.tab.* etapa$(ETAPA).* ./etapa$(ETAPA)

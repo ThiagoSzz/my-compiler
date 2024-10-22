@@ -1,16 +1,24 @@
 # Compiler Project
 
-Project for a compiler made for a C-like language using [flex](https://github.com/westes/flex) and the C programming language.
+Project for a compiler made for a C-like language using [flex](https://github.com/westes/flex), [bison](https://github.com/akimd/bison) and the C programming language with [gcc](https://github.com/gcc-mirror/gcc).
 
 ## Features
 
-### Step 1
+### Iterate 1: Lexical Analysis
 
 - Counts line number
 - Returns `ERROR` token for invalid entries
 - Ignores single-line comments (e.g `// comment`)
 - Returns tokens for reserved identifiers (e.g `int`, `float`), compound operators (e.g `<=`, `!=`) and special characters (e.g `!`, `+`)
 - Returns tokens for identifiers and literals
+
+### Iterate 2: Syntax Analysis
+
+- Displays syntax error cause
+- Implements rules for variable declaration, variable assignment, function call and more
+- Implements rules for expressions
+- Implements rules for function definition, command blocks
+- Implements rules for unary and binary operations like negation and comparison (e.g `a >= b`, `a == b`)
 
 ## How to execute
 
@@ -21,39 +29,33 @@ To build this program, use `make`. First, navigate to the directory containing t
 ```bash
 make
 ```
+> [!IMPORTANT]
+> You should have both flex and bison generators, as well as the gcc compiler installed previously for this step to work as expected.
 
 ### Run
 
 To run the program, execute the following command in terminal:
 
 ```bash
-./etapa1
+./etapaX
 ```
-
-### Run with input file
-
-If you want to run the program with an input file (e.g `input.txt`), use the following command:
-
-```bash
-./etapa1 < input.txt
-```
+> [!TIP]
+> You can run the program with an input file by using `./etapaX < filename` (e.g `./etapaX < input.txt`)
 
 ### Clean
 
-If you want to clean up your environment (delete `target` folder and executable), you can use the following command:
+If you want to clean up your environment (delete generated files and executable), you can use the following command:
 
 ```bash
 make clean
 ```
 
-### Generate deliverable file
+### Create deliverable
 
-To build a deliverable file, you can use the following command:
+To generate the deliverable `etapaX.tgz` folder, run the following command:
 
 ```bash
-make prod
+make deliverable
 ```
 
-This will move the relevant files from `src` and `include` folders, as well as the `Makefile.prod` file. Then it will compress the folder in the right format (e.g `etapa1.tgz`)
-
-To confirm that the generated deliverable works as expected, you can unzip the file and build using `make`.
+This will move all important files to the `etapaX` directory and then compress it into `etapaX.tgz`. Then, unzip it wherever you want, open the terminal, navigate to the unzipped folder, run and execute using the previous steps.

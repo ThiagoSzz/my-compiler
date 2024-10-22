@@ -9,14 +9,14 @@ on:
       - main
 
 jobs:
-  success_etapa1:
-    name: (etapa1) success tests
+  tests:
+    name: tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
       - name: Build files
-        run: make etapa1_test
+        run: make
       - name: Run tests
         shell: bash
         run: |
@@ -26,21 +26,39 @@ jobs:
           RED='\033[0;31m'
           GREEN='\033[0;32m'
           NC='\033[0;38;5;250m'
-          while IFS= read -r line
-          do
+          NC_DARKER='\033[0;38;5;244m'
+
+          for filename in tests/*; do
             TOTAL_TESTS=$(($TOTAL_TESTS + 1))
-            output=$(echo "$line" | ./etapa1)
-            if echo "$output" | grep -q 'TK_ERRO'; then
-              echo -e "${RED}FAIL ${NC}$output"
-              ERR_COUNT=$(($ERR_COUNT + 1))
+            if grep -q '//FAIL' "$filename"; then
+              expected="FAIL"
             else
-              echo -e "${GREEN}PASS ${NC}$output"
-              SUCCESS_COUNT=$(($SUCCESS_COUNT + 1))
+              expected="PASS"
             fi
-          done < tests/success_etapa1.txt
+
+            output=$(./etapa2 < "$filename" || true)
+            if echo $output | grep -q "line"; then
+              actual="FAIL"
+            else
+              actual="PASS"
+            fi
+
+            trimmed_filename="${filename#tests/}"
+            trimmed_filename="${trimmed_filename%.txt}"
+
+            if { [ "$expected" = "PASS" ] && [ "$actual" = "PASS" ]; } || { [ "$expected" = "FAIL" ] && [ "$actual" = "FAIL" ]; }; then
+              echo -e "${GREEN}PASS ${NC}$trimmed_filename   ${NC_DARKER}(expected: $expected, actual: $actual)"
+              SUCCESS_COUNT=$(($SUCCESS_COUNT + 1))
+            else
+              echo -e "${RED}FAIL ${NC}$trimmed_filename   ${NC_DARKER}(expected: $expected, actual: $actual)"
+              ERR_COUNT=$(($ERR_COUNT + 1))
+            fi
+          done
+
           printf "\n"
           echo -e "${NC}Tests: $TOTAL_TESTS total → ${GREEN}$SUCCESS_COUNT passed${NC}, ${RED}$ERR_COUNT failed${NC}"
-          if [ $ERR_COUNT -gt 0 ]; then
+
+          if (( ERR_COUNT > 0 )); then
             exit 1
           fi
       - name: Clean up

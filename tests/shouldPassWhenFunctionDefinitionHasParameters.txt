@@ -1,0 +1,4 @@
+//PASS
+get_value_plus_one = value <- int > int {
+  return value + 1;
+}
