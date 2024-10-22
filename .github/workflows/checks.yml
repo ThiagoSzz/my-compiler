@@ -26,6 +26,7 @@ jobs:
           RED='\033[0;31m'
           GREEN='\033[0;32m'
           NC='\033[0;38;5;250m'
+          NC_DARKER='\033[0;38;5;247m'
 
           for filename in tests/*; do
             TOTAL_TESTS=$(($TOTAL_TESTS + 1))
@@ -46,10 +47,10 @@ jobs:
             trimmed_filename="${trimmed_filename%.txt}"
 
             if { [ "$expected" = "PASS" ] && [ "$actual" = "PASS" ]; } || { [ "$expected" = "FAIL" ] && [ "$actual" = "FAIL" ]; }; then
-              echo -e "${GREEN}PASS ${NC}$trimmed_filename (expected: $expected, actual: $actual)"
+              echo -e "${GREEN}PASS ${NC}$trimmed_filename   ${NC_DARKER}(expected: $expected, actual: $actual)"
               SUCCESS_COUNT=$(($SUCCESS_COUNT + 1))
             else
-              echo -e "${RED}FAIL ${NC}$trimmed_filename (expected: $expected, actual: $actual)"
+              echo -e "${RED}FAIL ${NC}$trimmed_filename   ${NC_DARKER}(expected: $expected, actual: $actual)"
               ERR_COUNT=$(($ERR_COUNT + 1))
             fi
           done
