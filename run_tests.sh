@@ -58,7 +58,7 @@ printf "\n"
 echo "${NC}Tests: $TOTAL_TESTS total ${NC_DARKER}→ ${GREEN}$SUCCESS_COUNT passed${NC}, ${RED}$ERR_COUNT failed${NC}"
 
 # Exit with error code if there are any failed tests
-if (( $ERR_COUNT > 0 ));
+if [ "$ERR_COUNT" -gt 0 ];
 then
   exit 1
 fi
