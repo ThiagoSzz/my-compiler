@@ -58,6 +58,8 @@ After that, you can run the script using:
 sh run_tests.sh
 ```
 
+The test script also runs automatically in a github action executed for each commit in a pull request.
+
 ### Clean
 
 If you want to clean up your environment (delete generated files and executable), you can use the following command:
