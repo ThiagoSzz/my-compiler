@@ -1,3 +1,5 @@
+#!/bin/bash
+
 TOTAL_TESTS=0
 ERR_COUNT=0
 SUCCESS_COUNT=0
