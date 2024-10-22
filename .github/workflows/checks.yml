@@ -19,5 +19,5 @@ jobs:
       - name: Run test script
         shell: bash
         run: |
-          export TERM=xterm-color
+          echo "TERM=xterm-256color" >> $GITHUB_ENV
           ./run_tests.sh
