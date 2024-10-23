@@ -12,7 +12,7 @@ all: bison flex main
 	gcc main.o lex.yy.o parser.tab.o -o etapa$(ETAPA)
 
 bison:
-	bison -d parser.y -Wcounterexamples
+	bison -d parser.y
 	gcc -c parser.tab.c
 
 flex:
