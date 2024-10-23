@@ -41,9 +41,7 @@ for filename in tests/*; do
   trimmed_filename="${trimmed_filename%.txt}"
 
   # Check if expected equals actual
-  if 
-    { [ "$expected" = "PASS" ] && [ "$actual" = "PASS" ]; } || 
-    { [ "$expected" = "FAIL" ] && [ "$actual" = "FAIL" ]; }; 
+  if [ "$expected" = "$actual" ];
   then
     echo "${GREEN}${START_BOLD}PASS${RESET_BOLD} ${NC}$trimmed_filename   ${NC_DARKER}(expected: $expected, actual: $actual)"
     SUCCESS_COUNT=$(($SUCCESS_COUNT + 1))
