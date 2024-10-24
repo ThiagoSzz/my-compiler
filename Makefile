@@ -24,10 +24,7 @@ main:
 
 deliverable:
 	make clean
-	mkdir etapa$(ETAPA)
-	cp ${DELIVERABLE_FILES} ./etapa$(ETAPA)
-	tar cvzf etapa$(ETAPA).tgz etapa$(ETAPA)
-	rm -rf ./etapa$(ETAPA)
+	tar cvzf etapa$(ETAPA).tgz ${DELIVERABLE_FILES}
 
 clean:
 	rm -rf *.o *.yy.* *.tab.* etapa$(ETAPA).* ./etapa$(ETAPA)
