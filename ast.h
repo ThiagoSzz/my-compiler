@@ -14,14 +14,16 @@ typedef struct Node
 
 Node *create_node(LexicalValue lexical_value);
 
-void add_child(Node *parent, Node *child);
-
 Node *get_last_child(Node *parent);
 
-void print_ast(Node *node, int depth);
+void add_child(Node *parent, Node *child);
 
 void free_ast(Node *node);
 
-void exporta(void *arvore);
+void print_node_labels(Node *node);
+
+void print_node_connections(Node *node);
+
+void exporta(Node *node);
 
 #endif

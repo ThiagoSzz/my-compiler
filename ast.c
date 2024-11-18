@@ -17,28 +17,7 @@ Node *create_node(LexicalValue lexical_value)
   return node;
 }
 
-// add child to parent node
-void add_child(Node *parent, Node *child)
-{
-  if (!child)
-    return;
-
-  if (!parent)
-    free_ast(child);
-  return;
-
-  Node *last_child = get_last_child(parent);
-  if (last_child)
-  {
-    last_child->brother = child;
-  }
-  else
-  {
-    parent->child = child;
-  }
-  child->parent = parent;
-}
-
+// get last child of parent node
 Node *get_last_child(Node *parent)
 {
   Node *temp_last_child = NULL;
@@ -51,6 +30,30 @@ Node *get_last_child(Node *parent)
   }
 
   return temp_last_child;
+}
+
+// add child to parent node
+void add_child(Node *parent, Node *child)
+{
+  if (!child)
+    return;
+
+  if (!parent)
+  {
+    free_ast(child);
+    return;
+  }
+
+  Node *last_child = get_last_child(parent);
+  if (last_child)
+  {
+    last_child->brother = child;
+  }
+  else
+  {
+    parent->child = child;
+  }
+  child->parent = parent;
 }
 
 // free AST
@@ -70,47 +73,43 @@ void free_ast(Node *node)
   free(node);
 }
 
-void print_node(Node *node)
+// print node labels
+void print_node_labels(Node *node)
 {
-  if (node == NULL)
-    return;
-  printf("%p [label=\"", node);
-  printf("%s", node->lexical_value.label);
-  printf("\"];\n");
-
-  Node *node_child;
-  node_child = node->child;
-  while (node_child != NULL)
+  printf("%p [label=\"%s\"];\n", node, node->lexical_value.label);
+  if (node->child)
   {
-    print_node(node_child);
-    node_child = node_child->brother;
+    print_node_labels(node->child);
   }
-
-  return;
+  if (node->brother)
+  {
+    print_node_labels(node->brother);
+  }
 }
 
-void print_edge(Node *node)
+// print node connections
+void print_node_connections(Node *node)
 {
-  if (node == NULL)
-    return;
-
-  Node *node_child;
-  node_child = node->child;
-  while (node_child != NULL)
+  if (node->parent)
   {
-    printf("%p, %p\n", node, node_child);
-    print_edge(node_child);
-    node_child = node_child->brother;
+    printf("%p, %p \n", node->parent, node);
   }
-
-  return;
+  if (node->child)
+  {
+    print_node_connections(node->child);
+  }
+  if (node->brother)
+  {
+    print_node_connections(node->brother);
+  }
 }
 
-void exporta(void *arvore)
+// print AST
+void exporta(Node *node)
 {
-  Node *node;
-  node = (Node *)arvore;
-  print_node(node);
-  print_edge(node);
-  return;
+  if (!node)
+    return;
+
+  print_node_labels(node);
+  print_node_connections(node);
 }

@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "lexical_value.h"
@@ -18,7 +19,7 @@ LexicalValue create_lexical_value(char *value, TokenTypeEnum token_type, Literal
       lexical_value.value.int_value = atoi(value);
       break;
     case FLOAT:
-      lexical_value.value.int_value = atof(value);
+      lexical_value.value.float_value = atof(value);
       break;
     case NOT_A_LITERAL:
       break;
