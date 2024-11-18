@@ -320,14 +320,14 @@ variable_assignment: TK_IDENTIFICADOR '=' expression
 function_call: 
   TK_IDENTIFICADOR '(' list_of_arguments ')'
   {
-    $$ = create_node($1);
+    $$ = create_function_call_node($1);
     add_child($$, $3);
     free_lexical_value($2);
     free_lexical_value($4);
   }
   | TK_IDENTIFICADOR '(' ')'
   {
-    $$ = create_node($1);
+    $$ = create_function_call_node($1);
     free_lexical_value($2);
     free_lexical_value($3);
   }

@@ -17,6 +17,21 @@ Node *create_node(LexicalValue lexical_value)
   return node;
 }
 
+// create AST node for function call rules
+Node *create_function_call_node(LexicalValue lexical_value)
+{
+  Node *function_call_node = create_node(lexical_value);
+
+  char *prefix = "call ";
+  char *label = malloc(strlen(function_call_node->lexical_value.label) + strlen(prefix) + 1);
+  strcpy(label, prefix);
+  strcat(label, function_call_node->lexical_value.label);
+  free(function_call_node->lexical_value.label);
+  function_call_node->lexical_value.label = label;
+
+  return function_call_node;
+}
+
 // get last child of parent node
 Node *get_last_child(Node *parent)
 {

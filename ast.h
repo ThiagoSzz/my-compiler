@@ -14,6 +14,8 @@ typedef struct Node
 
 Node *create_node(LexicalValue lexical_value);
 
+Node *create_function_call_node(LexicalValue lexical_value);
+
 Node *get_last_child(Node *parent);
 
 void add_child(Node *parent, Node *child);
