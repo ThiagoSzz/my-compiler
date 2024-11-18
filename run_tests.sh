@@ -1,5 +1,6 @@
 #!/bin/bash
 
+ETAPA=3
 TOTAL_TESTS=0
 ERR_COUNT=0
 SUCCESS_COUNT=0
@@ -26,7 +27,7 @@ for filename in tests/*; do
   fi
 
   # Run the test
-  output=$(./etapa2 < "$filename" || true)
+  output=$(./etapa"$ETAPA" < "$filename" || true)
 
   # Check if the output contains the line of the error
   if echo $output | grep -q "line";
