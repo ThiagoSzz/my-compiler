@@ -22,9 +22,9 @@ void add_child(Node *parent, Node *child);
 
 void free_ast(Node *node);
 
-void print_node_labels(Node *node);
+void print_nodes(Node *node);
 
-void print_node_connections(Node *node);
+void print_edges(Node *node);
 
 void exporta(Node *node);
 

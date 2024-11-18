@@ -89,21 +89,21 @@ void free_ast(Node *node)
 }
 
 // print node labels
-void print_node_labels(Node *node)
+void print_nodes(Node *node)
 {
   printf("%p [label=\"%s\"];\n", node, node->lexical_value.label);
   if (node->child)
   {
-    print_node_labels(node->child);
+    print_nodes(node->child);
   }
   if (node->brother)
   {
-    print_node_labels(node->brother);
+    print_nodes(node->brother);
   }
 }
 
 // print node connections
-void print_node_connections(Node *node)
+void print_edges(Node *node)
 {
   if (node->parent)
   {
@@ -111,11 +111,11 @@ void print_node_connections(Node *node)
   }
   if (node->child)
   {
-    print_node_connections(node->child);
+    print_edges(node->child);
   }
   if (node->brother)
   {
-    print_node_connections(node->brother);
+    print_edges(node->brother);
   }
 }
 
@@ -125,6 +125,6 @@ void exporta(Node *node)
   if (!node)
     return;
 
-  print_node_labels(node);
-  print_node_connections(node);
+  print_nodes(node);
+  print_edges(node);
 }
