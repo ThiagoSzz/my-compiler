@@ -5,7 +5,7 @@
 # /*---------------------------*/
 
 ETAPA = 3
-DELIVERABLE_FILES = main.c parser.y scanner.l Makefile README.md lexical_value.h lexical_value.c ast.h ast.c
+DELIVERABLE_FILES = main.c ast.c ast.h lexical_value.c lexical_value.h parser.y scanner.l Makefile README.md
 
 all: bison flex main ast lexical_value
 	gcc main.o lex.yy.o parser.tab.o lexical_value.o ast.o -o etapa$(ETAPA)
