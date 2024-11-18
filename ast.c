@@ -7,7 +7,7 @@
 // create AST node
 Node *create_node(LexicalValue lexical_value)
 {
-  Node *node = malloc(sizeof(Node));
+  Node *node = (Node *)malloc(sizeof(Node));
 
   node->lexical_value = lexical_value;
   node->brother = NULL;
@@ -22,11 +22,16 @@ Node *create_function_call_node(LexicalValue lexical_value)
 {
   Node *function_call_node = create_node(lexical_value);
 
+  // add "call " prefix to label
   char *prefix = "call ";
   char *label = malloc(strlen(function_call_node->lexical_value.label) + strlen(prefix) + 1);
   strcpy(label, prefix);
   strcat(label, function_call_node->lexical_value.label);
+
+  // free old label
   free(function_call_node->lexical_value.label);
+
+  // set new label
   function_call_node->lexical_value.label = label;
 
   return function_call_node;
@@ -38,6 +43,7 @@ Node *get_last_child(Node *parent)
   Node *temp_last_child = NULL;
   Node *last_child = parent->child;
 
+  // iterate through children to get last child
   while (last_child)
   {
     temp_last_child = last_child;
@@ -88,7 +94,7 @@ void free_ast(Node *node)
   free(node);
 }
 
-// print node labels
+// print node labels using recursive DFS
 void print_nodes(Node *node)
 {
   printf("%p [label=\"%s\"];\n", node, node->lexical_value.label);
@@ -102,7 +108,7 @@ void print_nodes(Node *node)
   }
 }
 
-// print node connections
+// print node connections using recursive DFS
 void print_edges(Node *node)
 {
   if (node->parent)

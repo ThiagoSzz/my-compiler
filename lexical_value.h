@@ -32,4 +32,4 @@ LexicalValue create_lexical_value(char *value, TokenTypeEnum token_type, Literal
 
 void free_lexical_value(LexicalValue lexical_value);
 
-#endif
+#endif // LEXICAL_VALUE_H
