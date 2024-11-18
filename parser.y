@@ -104,10 +104,10 @@ program:
   ;
 
 list_of_functions:
-  list_of_functions function
+  function list_of_functions
   {
-    $$ = $2;
-    add_child($$, $1);
+    $$ = $1;
+    add_child($$, $2);
   }
   | function
   {
@@ -167,9 +167,9 @@ function_signature: TK_IDENTIFICADOR '=' list_of_parameters '>' type
   ;
 
 list_of_parameters:
-  list_of_parameters TK_OC_OR parameter
+  parameter TK_OC_OR list_of_parameters
   {
-    $$ = $1;
+    $$ = $3;
     free_lexical_value($2);
   }
   | parameter
@@ -217,10 +217,17 @@ block:
   ;
 
 commands:
-  commands simple_command
+  simple_command commands
   {
-    $$ = $2;
-    add_child($$, $1);
+    if($1)
+    {
+      $$ = $1;
+      add_child($$, $2);
+    }
+    else
+    {
+      $$ = $2;
+    }
   }
   | simple_command
   {
@@ -272,9 +279,14 @@ variable_declaration: type variable_list
   ;
 
 variable_list:
-  variable_list ',' declaration
+  declaration ',' variable_list  
   {
-    $$ = $1;
+    if ($1) {
+      $$ = $1;
+      add_child($$, $3);
+    } else {
+      $$ = $3;
+    }
     free_lexical_value($2);
   }
   | declaration
@@ -292,7 +304,8 @@ declaration:
   }
   | TK_IDENTIFICADOR
   {
-    $$ = create_node($1);
+    $$ = NULL;
+    free_lexical_value($1);
   }
   ;
 
@@ -321,10 +334,10 @@ function_call:
   ;
 
 list_of_arguments:
-  list_of_arguments ',' expression
+  expression ',' list_of_arguments
   {
-    $$ = $3;
-    add_child($$, $1);
+    $$ = $1;
+    add_child($$, $3);
     free_lexical_value($2);
   }
   | expression
