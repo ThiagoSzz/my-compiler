@@ -17,12 +17,6 @@
   extern void *arvore;
 %}
 
-%code requires
-{
-  #include "ast.h"
-  #include "lexical_value.h"
-}
-
 %union
 {
   LexicalValue LexicalValue;
@@ -43,10 +37,10 @@
 %token<LexicalValue> TK_OC_NE
 %token<LexicalValue> TK_OC_AND
 %token<LexicalValue> TK_OC_OR
-%token<LexicalValue> '!' '*' '/' '%' '+' '-' '<' '>' '{' '}' '(' ')' '=' ',' ';'
 %token<LexicalValue> TK_IDENTIFICADOR
 %token<LexicalValue> TK_LIT_INT
 %token<LexicalValue> TK_LIT_FLOAT
+%token<LexicalValue> '!' '*' '/' '%' '+' '-' '<' '>' '{' '}' '(' ')' '=' ',' ';'
 %token TK_ERRO
 
 %type<Node> program
