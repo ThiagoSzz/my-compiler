@@ -1,3 +1,9 @@
+/*---------------------------*/
+/* -->>     Grupo I     <<-- */
+/*        Thiago Haab        */
+/*      Henrique Vazatta     */
+/*---------------------------*/
+
 #ifndef LEXICAL_VALUE_H
 #define LEXICAL_VALUE_H
 

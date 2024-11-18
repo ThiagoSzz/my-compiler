@@ -1,3 +1,9 @@
+/*---------------------------*/
+/* -->>     Grupo I     <<-- */
+/*        Thiago Haab        */
+/*      Henrique Vazatta     */
+/*---------------------------*/
+
 #ifndef AST_H
 #define AST_H
 

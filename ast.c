@@ -1,3 +1,9 @@
+/*---------------------------*/
+/* -->>     Grupo I     <<-- */
+/*        Thiago Haab        */
+/*      Henrique Vazatta     */
+/*---------------------------*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
