@@ -5,7 +5,14 @@
 /*---------------------------*/
 
 %{
+  #include "ast.h"
+  #include "lexical_value.h"
   #include "parser.tab.h"
+
+  #define YYSTYPE LexicalValue
+
+  int get_line_number(void);
+  char *get_value(void);
 %}
 
 %option noyywrap
@@ -13,26 +20,26 @@
 
 %%
 
-"int" { return TK_PR_INT; }
-"float" { return TK_PR_FLOAT; }
-"if" { return TK_PR_IF; }
-"else" { return TK_PR_ELSE; }
-"while" { return TK_PR_WHILE; }
-"return" { return TK_PR_RETURN; }
+"int" { yylval.LexicalValue = create_lexical_value(get_value(), NOT_RELEVANT, NOT_A_LITERAL, get_line_number()); return TK_PR_INT; }
+"float" { yylval.LexicalValue = create_lexical_value(get_value(), NOT_RELEVANT, NOT_A_LITERAL, get_line_number()); return TK_PR_FLOAT; }
+"if" { yylval.LexicalValue = create_lexical_value(get_value(), NOT_RELEVANT, NOT_A_LITERAL, get_line_number()); return TK_PR_IF; }
+"else" { yylval.LexicalValue = create_lexical_value(get_value(), NOT_RELEVANT, NOT_A_LITERAL, get_line_number()); return TK_PR_ELSE; }
+"while" { yylval.LexicalValue = create_lexical_value(get_value(), NOT_RELEVANT, NOT_A_LITERAL, get_line_number()); return TK_PR_WHILE; }
+"return" { yylval.LexicalValue = create_lexical_value(get_value(), NOT_RELEVANT, NOT_A_LITERAL, get_line_number()); return TK_PR_RETURN; }
 
-[0-9]*\.[0-9]+ { return TK_LIT_FLOAT; }
-[0-9]+ { return TK_LIT_INT; }
+[0-9]*\.[0-9]+ { yylval.LexicalValue = create_lexical_value(get_value(), LITERAL, INT, get_line_number()); return TK_LIT_FLOAT; }
+[0-9]+ { yylval.LexicalValue = create_lexical_value(get_value(), LITERAL, FLOAT, get_line_number()); return TK_LIT_INT; }
 
-[a-z_][a-z0-9_]* { return TK_IDENTIFICADOR; }
+[a-z_][a-z0-9_]* { yylval.LexicalValue = create_lexical_value(get_value(), IDENTIFIER, NOT_A_LITERAL, get_line_number()); return TK_IDENTIFICADOR; }
 
-"<=" { return TK_OC_LE; }
-">=" { return TK_OC_GE; }
-"==" { return TK_OC_EQ; }
-"!=" { return TK_OC_NE; }
-"&" { return TK_OC_AND; }
-"|" { return TK_OC_OR; }
+"<=" { yylval.LexicalValue = create_lexical_value(get_value(), NOT_RELEVANT, NOT_A_LITERAL, get_line_number()); return TK_OC_LE; }
+">=" { yylval.LexicalValue = create_lexical_value(get_value(), NOT_RELEVANT, NOT_A_LITERAL, get_line_number()); return TK_OC_GE; }
+"==" { yylval.LexicalValue = create_lexical_value(get_value(), NOT_RELEVANT, NOT_A_LITERAL, get_line_number()); return TK_OC_EQ; }
+"!=" { yylval.LexicalValue = create_lexical_value(get_value(), NOT_RELEVANT, NOT_A_LITERAL, get_line_number()); return TK_OC_NE; }
+"&" { yylval.LexicalValue = create_lexical_value(get_value(), NOT_RELEVANT, NOT_A_LITERAL, get_line_number()); return TK_OC_AND; }
+"|" { yylval.LexicalValue = create_lexical_value(get_value(), NOT_RELEVANT, NOT_A_LITERAL, get_line_number()); return TK_OC_OR; }
 
-[!|*|/|%|+|\-|<|>|{|}|(|)|=|,|;] { return yytext[0]; }
+[!|*|/|%|+|\-|<|>|{|}|(|)|=|,|;] { yylval.LexicalValue = create_lexical_value(get_value(), NOT_RELEVANT, NOT_A_LITERAL, get_line_number()); return yytext[0]; }
 
 \n { }
 [ \t] { }
@@ -44,4 +51,8 @@
 
 int get_line_number(void) {
   return yylineno;
+}
+
+char *get_value(void) {
+  return yytext;
 }

@@ -20,6 +20,14 @@ Project for a compiler made for a C-like language using [flex](https://github.co
 - Implements rules for function definition, command blocks
 - Implements rules for unary and binary operations like negation and comparison (e.g `a >= b`, `a == b`)
 
+### Iterate 3: Abstract Syntax Tree
+
+- Creates the AST data structure
+- Builds the AST in the parser
+- Creates the LexicalValue data structure
+- Associates the values in the scanner
+- Prints the AST recursively using DFS
+
 ## How to execute
 
 ### Build
