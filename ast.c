@@ -132,7 +132,7 @@ void print_edges(Node *node)
 }
 
 // print AST
-void exporta(Node *node)
+void export_ast(Node *node)
 {
   if (!node)
     return;

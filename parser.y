@@ -14,7 +14,7 @@
   void yyerror (char const *mensagem);
   int get_line_number();
 
-  extern void *arvore;
+  extern void *tree;
 %}
 
 %union
@@ -88,12 +88,12 @@ program:
   list_of_functions 
   {
     $$ = $1;
-    arvore = $$;
+    tree = $$;
   }
   | 
   {
     $$ = NULL;
-    arvore = $$;
+    tree = $$;
   }
   ;
 

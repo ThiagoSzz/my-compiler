@@ -32,6 +32,6 @@ void print_nodes(Node *node);
 
 void print_edges(Node *node);
 
-void exporta(Node *node);
+void export_ast(Node *node);
 
 #endif // AST_H
