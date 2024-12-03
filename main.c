@@ -1,12 +1,21 @@
 #include <stdio.h>
+#include "ast.h"
+#include "symbol_table.h"
+
 extern int yyparse(void);
 extern int yylex_destroy(void);
-void *arvore = NULL;
-void exporta(void *arvore);
+
+Node *tree;
+Stack *stack;
+
 int main(int argc, char **argv)
 {
+  init_stack();
+
   int ret = yyparse();
-  exporta(arvore);
   yylex_destroy();
+
+  // print_stack(stack);
+
   return ret;
 }
