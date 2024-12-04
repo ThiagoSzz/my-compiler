@@ -27,8 +27,8 @@
 "while" { yylval.LexicalValue = create_lexical_value(get_value(), TOKEN_TYPE_NOT_RELEVANT, NOT_A_LITERAL, get_line_number()); return TK_PR_WHILE; }
 "return" { yylval.LexicalValue = create_lexical_value(get_value(), TOKEN_TYPE_NOT_RELEVANT, NOT_A_LITERAL, get_line_number()); return TK_PR_RETURN; }
 
-[0-9]*\.[0-9]+ { yylval.LexicalValue = create_lexical_value(get_value(), TOKEN_TYPE_LITERAL, LITERAL_TYPE_INT, get_line_number()); return TK_LIT_FLOAT; }
-[0-9]+ { yylval.LexicalValue = create_lexical_value(get_value(), TOKEN_TYPE_LITERAL, LITERAL_TYPE_FLOAT, get_line_number()); return TK_LIT_INT; }
+[0-9]*\.[0-9]+ { yylval.LexicalValue = create_lexical_value(get_value(), TOKEN_TYPE_LITERAL, LITERAL_TYPE_FLOAT, get_line_number()); return TK_LIT_FLOAT; }
+[0-9]+ { yylval.LexicalValue = create_lexical_value(get_value(), TOKEN_TYPE_LITERAL, LITERAL_TYPE_INT, get_line_number()); return TK_LIT_INT; }
 
 [a-z_][a-z0-9_]* { yylval.LexicalValue = create_lexical_value(get_value(), TOKEN_TYPE_IDENTIFIER, NOT_A_LITERAL, get_line_number()); return TK_IDENTIFICADOR; }
 
