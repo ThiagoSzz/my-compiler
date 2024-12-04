@@ -70,17 +70,8 @@ Stack *create_table_on_stack(Stack *stack)
 // insert symbol table into symbol table stack and add new table to the top
 Stack *insert_table_into_stack(Stack *current_first_table, SymbolTable *symbol_table)
 {
-  if (!current_first_table)
-  {
-    printf("Adding table to null stack \n");
+  if (!current_first_table || !symbol_table)
     return NULL;
-  }
-
-  if (!symbol_table)
-  {
-    printf("Adding null table to stack \n");
-    return NULL;
-  }
 
   Stack *new_first_table = create_symbol_table_stack();
   new_first_table->symbol_table = symbol_table;
@@ -139,13 +130,9 @@ void insert_new_symbol_table_item(SymbolTableItem *items, int max_size, char *ke
 void insert_value_into_next_table(Stack *stack, SymbolTableItemValue value)
 {
   if (!stack)
-  {
-    printf("adding value to empty stack");
-  }
-  else
-  {
-    insert_value_into_stack(stack->next, value);
-  }
+    return;
+
+  insert_value_into_stack(stack->next, value);
 }
 
 // insert new parameter into function parameter linked list
@@ -181,7 +168,7 @@ SymbolTableItemValue create_symbol_table_value_with_parameters(SymbolNatureEnum 
 // create and initialize function parameter
 Parameter *create_function_parameter(LexicalValue lexical_value, DataType data_type)
 {
-  Parameter *function_parameter = malloc(sizeof(Parameter));
+  Parameter *function_parameter = (Parameter *)malloc(sizeof(Parameter));
   if (!function_parameter)
   {
     printf("failed to create function parameter");
