@@ -54,6 +54,8 @@
 %token TK_ERRO
 
 %type<Node> program
+%type<Node> start_program
+%type<Node> end_program
 %type<Node> list_of_functions
 %type<DataType> type
 %type<Node> literal
@@ -97,7 +99,7 @@
 ///////////////////////////////
 
 program:
-  list_of_functions 
+  start_program list_of_functions end_program
   {
     $$ = $1;
     tree = $$;
@@ -108,6 +110,17 @@ program:
     tree = $$;
   }
   ;
+
+start_program:
+  {
+    init_stack();
+  }
+
+end_program:
+  {
+    // print_stack(stack);
+    free_stack(stack);
+  }
 
 list_of_functions:
   function list_of_functions
@@ -130,7 +143,7 @@ type:
   {
     data_type = DATA_TYPE_INT;
     $$ = data_type;
-
+    
     free_lexical_value($1);
   }
   | TK_PR_FLOAT
@@ -149,17 +162,17 @@ type:
 literal: 
   TK_LIT_INT
   {
-    SymbolTableItemValue value = create_symbol_table_value_with_type(SYMBOL_NATURE_UNEXISTENT, $1, DATA_TYPE_INT);
-    add_value_to_table_on_stack(stack, value);
+    SymbolTableItemValue value = create_symbol_table_value(SYMBOL_NATURE_UNEXISTENT, $1, DATA_TYPE_INT);
+    insert_value_into_stack(stack, value);
 
-    $$ = create_node_with_value($1, value);
+    $$ = create_node_from_value($1, value);
   }
   | TK_LIT_FLOAT
   {
-    SymbolTableItemValue value = create_symbol_table_value_with_type(SYMBOL_NATURE_UNEXISTENT, $1, DATA_TYPE_FLOAT);
-    add_value_to_table_on_stack(stack, value);
-    
-    $$ = create_node_with_value($1, value);
+    SymbolTableItemValue value = create_symbol_table_value(SYMBOL_NATURE_UNEXISTENT, $1, DATA_TYPE_FLOAT);
+    insert_value_into_stack(stack, value);
+
+    $$ = create_node_from_value($1, value);
   }
   ;
 
@@ -176,15 +189,12 @@ function: function_signature function_body
 
 function_signature: TK_IDENTIFICADOR '=' list_of_parameters '>' type
   {
-    validate_create_function_signature(stack->next, $1);
-
+    validate_function_declaration(stack->next, $1);
     stack = create_table_on_stack(stack);
+    SymbolTableItemValue value = create_symbol_table_value_with_parameters(SYMBOL_NATURE_FUNCTION, $1, $5, $3);
+    insert_value_into_next_table(stack, value);
 
-    SymbolTableItemValue symbol = create_symbol_table_value_with_type_and_parameters(SYMBOL_NATURE_FUNCTION, $1, $5, $3);
-    add_value_to_next_table(stack, symbol);
-
-    $$ = create_node_with_value($1, symbol);
-
+    $$ = create_node_from_value($1, value);
     free_lexical_value($2);
     free_lexical_value($4);
   }
@@ -194,23 +204,21 @@ list_of_parameters:
   TK_IDENTIFICADOR '<''-' type
   {
     $$ = create_function_parameter($1, $4);
-
-    SymbolTableItemValue symbol = create_symbol_table_value_with_type(SYMBOL_NATURE_VARIABLE, $1, $4);
-    add_value_to_table_on_stack(stack, symbol);
-
     free_lexical_value($2);
     free_lexical_value($3);
+
+    SymbolTableItemValue value = create_symbol_table_value(SYMBOL_NATURE_VARIABLE, $1, $4);
+    insert_value_into_stack(stack, value);
   }
   | TK_IDENTIFICADOR '<''-' type TK_OC_OR list_of_parameters
   {
-    $$ = add_function_parameter($6, $1, $4);
-
-    SymbolTableItemValue symbol = create_symbol_table_value_with_type(SYMBOL_NATURE_VARIABLE, $1, $4);
-    add_value_to_table_on_stack(stack, symbol);
-
+    $$ = insert_new_parameter($6, $1, $4);
     free_lexical_value($2);
     free_lexical_value($3);
     free_lexical_value($5);
+
+    SymbolTableItemValue value = create_symbol_table_value(SYMBOL_NATURE_VARIABLE, $1, $4);
+    insert_value_into_stack(stack, value);
   }
   | 
   {
@@ -242,7 +250,7 @@ block:
 start_of_block: '{'
   {
     SymbolTable *block_symbol_table = create_symbol_table();
-    stack = add_table_to_stack(stack, block_symbol_table);
+    stack = insert_table_into_stack(stack, block_symbol_table);
   }
   ;
 
@@ -319,34 +327,34 @@ variable_list:
   { 
     $$ = NULL;
 
-    SymbolTableItemValue symbol = create_symbol_table_value_with_type(SYMBOL_NATURE_VARIABLE, $1, data_type);
-    add_value_to_table_on_stack(stack, symbol);
+    SymbolTableItemValue value = create_symbol_table_value(SYMBOL_NATURE_VARIABLE, $1, data_type);
+    insert_value_into_stack(stack, value);
   }
   | TK_IDENTIFICADOR ',' variable_list
   { 
     $$ = $3;
 
-    SymbolTableItemValue symbol = create_symbol_table_value_with_type(SYMBOL_NATURE_VARIABLE, $1, data_type);
-    add_value_to_table_on_stack(stack, symbol);
+    SymbolTableItemValue value = create_symbol_table_value(SYMBOL_NATURE_VARIABLE, $1, data_type);
+    insert_value_into_stack(stack, value);
 
     free_lexical_value($2);
   }
   | TK_IDENTIFICADOR TK_OC_LE literal 
   {
-    SymbolTableItemValue symbol = create_symbol_table_value_with_type(SYMBOL_NATURE_VARIABLE, $1, data_type);
-    add_value_to_table_on_stack(stack, symbol);
+    SymbolTableItemValue value = create_symbol_table_value(SYMBOL_NATURE_VARIABLE, $1, data_type);
+    insert_value_into_stack(stack, value);
 
-    $$ = create_node_with_type($2, data_type);
-    add_child($$, create_node_with_value($1, symbol));
+    $$ = create_node_from_type($2, data_type);
+    add_child($$, create_node_from_value($1, value));
     add_child($$, $3);
   }
   | TK_IDENTIFICADOR TK_OC_LE literal ',' variable_list 
   { 
-    SymbolTableItemValue symbol = create_symbol_table_value_with_type(SYMBOL_NATURE_VARIABLE, $1, data_type);
-    add_value_to_table_on_stack(stack, symbol);
-
-    $$ = create_node_with_type($2, data_type);
-    add_child($$, create_node_with_value($1, symbol));
+    SymbolTableItemValue value = create_symbol_table_value(SYMBOL_NATURE_VARIABLE, $1, data_type);
+    insert_value_into_stack(stack, value);
+    
+    $$ = create_node_from_type($2, data_type);
+    add_child($$, create_node_from_value($1, value));
     add_child($$, $3);
     add_child($$, $5);
     free_lexical_value($4);
@@ -355,14 +363,12 @@ variable_list:
 
 variable_assignment: TK_IDENTIFICADOR '=' expression
   {
-    SymbolTableItemValue symbol = find_variable_value_in_stack_by_lexical_value(stack, $1);
+    SymbolTableItemValue value = find_variable_value_in_stack_by_lexical_value(stack, $1);
+    validate_variable_use(value, $1);
 
-    validate_variable_use(symbol, $1);
-
-    Node* variable = create_node_with_type($1, symbol.type);
-    $$ = create_node_from_assignment($2, variable, $3);
-
-    add_child($$, variable);
+    Node* identifier = create_node_from_type($1, value.type);
+    $$ = create_node_from_assignment($2, identifier, $3);
+    add_child($$, identifier);
     add_child($$, $3);
   }
   ;
@@ -370,22 +376,20 @@ variable_assignment: TK_IDENTIFICADOR '=' expression
 function_call: 
   TK_IDENTIFICADOR '(' list_of_arguments ')'
   {
-    SymbolTableItemValue symbol = find_function_value_in_stack_by_lexical_value(stack, $1);
+    SymbolTableItemValue value = find_function_value_in_stack_by_lexical_value(stack, $1);
+    validate_function_use(value, $1);
 
-    validate_function_call(symbol, $1);
-
-    $$ = create_function_call_node_with_value($1, symbol);
+    $$ = create_function_call_node_from_value($1, value);
     add_child($$, $3);
     free_lexical_value($2);
     free_lexical_value($4);
   }
   | TK_IDENTIFICADOR '(' ')'
   {
-    SymbolTableItemValue symbol = find_function_value_in_stack_by_lexical_value(stack, $1);
+    SymbolTableItemValue value = find_function_value_in_stack_by_lexical_value(stack, $1);
+    validate_function_use(value, $1);
 
-    validate_function_call(symbol, $1);
-
-    $$ = create_function_call_node_with_value($1, symbol);
+    $$ = create_function_call_node_from_value($1, value);
     free_lexical_value($2);
     free_lexical_value($3);
   }
@@ -617,11 +621,10 @@ precedence_2_operators:
 operand:
   TK_IDENTIFICADOR
   {
-    SymbolTableItemValue symbol = find_variable_value_in_stack_by_lexical_value(stack, $1);
+    SymbolTableItemValue value = find_variable_value_in_stack_by_lexical_value(stack, $1);
+    validate_variable_use(value, $1);
 
-    validate_variable_use(symbol, $1);
-
-    $$ = create_node_with_type($1, symbol.type);
+    $$ = create_node_from_type($1, value.type);
   }
   | literal
   {

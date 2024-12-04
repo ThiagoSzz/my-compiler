@@ -11,16 +11,16 @@ extern Node *tree;
 extern Stack *stack;
 extern int yylex_destroy(void);
 
-// initialize global symbol table stack
+// create and initialize global symbol table stack
 void init_stack()
 {
   stack = create_symbol_table_stack();
 
   SymbolTable *global_symbol_table = create_symbol_table();
-  stack = add_table_to_stack(stack, global_symbol_table);
+  stack = insert_table_into_stack(stack, global_symbol_table);
 }
 
-// create symbol table
+// create and initialize symbol table
 SymbolTable *create_symbol_table()
 {
   SymbolTable *symbol_table = (SymbolTable *)malloc(sizeof(SymbolTable));
@@ -31,8 +31,8 @@ SymbolTable *create_symbol_table()
   }
 
   symbol_table->size = 0;
-  symbol_table->capacity = SYMBOL_TABLE_CAPACITY;
-  symbol_table->items = (SymbolTableItem *)calloc(symbol_table->capacity, sizeof(SymbolTableItem));
+  symbol_table->max_size = SYMBOL_TABLE_MAX_SIZE;
+  symbol_table->items = (SymbolTableItem *)calloc(symbol_table->max_size, sizeof(SymbolTableItem));
 
   if (!symbol_table->items)
   {
@@ -44,7 +44,7 @@ SymbolTable *create_symbol_table()
   return symbol_table;
 }
 
-// create stack
+// create and initialize symbol table stack
 Stack *create_symbol_table_stack()
 {
   Stack *stack = (Stack *)malloc(sizeof(Stack));
@@ -60,8 +60,15 @@ Stack *create_symbol_table_stack()
   return stack;
 }
 
-// add symbol table to stack top
-Stack *add_table_to_stack(Stack *current_first_table, SymbolTable *symbol_table)
+// create symbol table and insert into symbol table stack
+Stack *create_table_on_stack(Stack *stack)
+{
+  SymbolTable *new_table = create_symbol_table();
+  return insert_table_into_stack(stack, new_table);
+}
+
+// insert symbol table into symbol table stack and add new table to the top
+Stack *insert_table_into_stack(Stack *current_first_table, SymbolTable *symbol_table)
 {
   if (!current_first_table)
   {
@@ -82,8 +89,8 @@ Stack *add_table_to_stack(Stack *current_first_table, SymbolTable *symbol_table)
   return new_first_table;
 }
 
-// add item value to stack
-void add_value_to_table_on_stack(Stack *stack, SymbolTableItemValue value)
+// validate and insert symbol table item value into symbol table stack
+void insert_value_into_stack(Stack *stack, SymbolTableItemValue value)
 {
   SymbolTable *table = stack->symbol_table;
   if (!stack || !table)
@@ -98,21 +105,15 @@ void add_value_to_table_on_stack(Stack *stack, SymbolTableItemValue value)
     return;
   }
 
-  SymbolTableItemValue item_value = find_item_value_by_key(table, value.lexical_value.label);
+  validate_variable_declaration(stack, value.lexical_value);
 
-  if (item_value.nature != SYMBOL_NATURE_UNEXISTENT)
-  {
-    print_error("ERR_DECLARED", value.line_number, "failed to re-declare variable", value.lexical_value.label, item_value.line_number);
-    exit(ERR_DECLARED);
-  }
-
-  add_item_to_list(table->items, table->capacity, value.lexical_value.label, &table->size, value);
+  insert_new_symbol_table_item(table->items, table->max_size, value.lexical_value.label, &table->size, value);
 }
 
-// add item to symbol table linked list of items
-void add_item_to_list(SymbolTableItem *items, int capacity, char *key, int *size, SymbolTableItemValue value)
+// iterate structure and insert symbol table item into symbol table items linked list
+void insert_new_symbol_table_item(SymbolTableItem *items, int max_size, char *key, int *size, SymbolTableItemValue value)
 {
-  for (int i = 0; i < capacity; i++)
+  for (int i = 0; i < max_size; i++)
   {
     if (!items[i].key)
     {
@@ -134,8 +135,29 @@ void add_item_to_list(SymbolTableItem *items, int capacity, char *key, int *size
   printf("failed to add item to list, no space left");
 }
 
-// create symbol table value with type
-SymbolTableItemValue create_symbol_table_value_with_type(SymbolNatureEnum nature, LexicalValue lexical_value, DataType data_type)
+// insert symbol table item value into next table in symbol table stack
+void insert_value_into_next_table(Stack *stack, SymbolTableItemValue value)
+{
+  if (!stack)
+  {
+    printf("adding value to empty stack");
+  }
+  else
+  {
+    insert_value_into_stack(stack->next, value);
+  }
+}
+
+// insert new parameter into function parameter linked list
+Parameter *insert_new_parameter(Parameter *function_parameter, LexicalValue lexical_value, DataType data_type)
+{
+  Parameter *new_function_parameter = create_function_parameter(lexical_value, data_type);
+  new_function_parameter->next = function_parameter;
+  return new_function_parameter;
+}
+
+// create symbol table item value
+SymbolTableItemValue create_symbol_table_value(SymbolNatureEnum nature, LexicalValue lexical_value, DataType data_type)
 {
   SymbolTableItemValue value;
   value.line_number = lexical_value.line_number;
@@ -147,36 +169,16 @@ SymbolTableItemValue create_symbol_table_value_with_type(SymbolNatureEnum nature
   return value;
 }
 
-// create table on stack
-Stack *create_table_on_stack(Stack *symbol_table_stack)
+// create symbol table item value with parameters
+SymbolTableItemValue create_symbol_table_value_with_parameters(SymbolNatureEnum nature, LexicalValue lexical_value, DataType data_type, Parameter *parameters)
 {
-  SymbolTable *new_table = create_symbol_table();
-  return add_table_to_stack(symbol_table_stack, new_table);
-}
-
-// create symbol table value with type and parameters
-SymbolTableItemValue create_symbol_table_value_with_type_and_parameters(SymbolNatureEnum symbol_type, LexicalValue lexical_value, DataType data_type, Parameter *parameters)
-{
-  SymbolTableItemValue value = create_symbol_table_value_with_type(symbol_type, lexical_value, data_type);
+  SymbolTableItemValue value = create_symbol_table_value(nature, lexical_value, data_type);
   value.parameters = parameters;
 
   return value;
 }
 
-// add value to next table in stack
-void add_value_to_next_table(Stack *stack, SymbolTableItemValue value)
-{
-  if (!stack)
-  {
-    printf("adding value to empty stack");
-  }
-  else
-  {
-    add_value_to_table_on_stack(stack->next, value);
-  }
-}
-
-// create function parameter
+// create and initialize function parameter
 Parameter *create_function_parameter(LexicalValue lexical_value, DataType data_type)
 {
   Parameter *function_parameter = malloc(sizeof(Parameter));
@@ -192,198 +194,180 @@ Parameter *create_function_parameter(LexicalValue lexical_value, DataType data_t
   return function_parameter;
 }
 
-// add function parameter
-Parameter *add_function_parameter(Parameter *function_parameter, LexicalValue lexical_value, DataType data_type)
+// validate variable declaration and print error if variable is already declared
+void validate_variable_declaration(Stack *stack, LexicalValue lexical_value)
 {
-  Parameter *new_function_parameter = create_function_parameter(lexical_value, data_type);
-  new_function_parameter->next = function_parameter;
-  return new_function_parameter;
+  SymbolTableItemValue value = find_item_value_by_key(stack->symbol_table, lexical_value.label);
+  if (value.nature != SYMBOL_NATURE_UNEXISTENT)
+  {
+    print_error("ERR_DECLARED", lexical_value.line_number, "failed to re-declare variable", lexical_value.label, value.line_number);
+    exit(ERR_DECLARED);
+  }
 }
 
-// validate and create function signature
-void validate_create_function_signature(Stack *symbol_table_stack, LexicalValue lexical_value)
+// validate function declaration and print error if function is already declared
+void validate_function_declaration(Stack *stack, LexicalValue lexical_value)
 {
-  while (symbol_table_stack)
+  while (stack)
   {
-    SymbolTableItemValue value = find_item_value_by_key(symbol_table_stack->symbol_table, lexical_value.label);
+    SymbolTableItemValue value = find_item_value_by_key(stack->symbol_table, lexical_value.label);
     if (value.nature == SYMBOL_NATURE_FUNCTION)
     {
       print_error("ERR_DECLARED", lexical_value.line_number, "failed to re-declare function", lexical_value.label, value.line_number);
       exit(ERR_DECLARED);
     }
-    symbol_table_stack = symbol_table_stack->next;
+    stack = stack->next;
   }
 }
 
-// find variable value in stack by lexical value
-SymbolTableItemValue find_variable_value_in_stack_by_lexical_value(Stack *symbol_table_stack, LexicalValue lexical_value)
+// validate variable use and print error if variable is not declared
+void validate_variable_use(SymbolTableItemValue value, LexicalValue lexical_value)
 {
-  if (!symbol_table_stack)
+  if (value.nature != SYMBOL_NATURE_VARIABLE)
   {
-    print_error("ERR_UNDECLARED", lexical_value.line_number, "failed to use undeclared variable", lexical_value.label, -1);
-    free_global_variables();
-    exit(ERR_UNDECLARED);
-  }
-
-  SymbolTableItemValue value = find_item_value_by_key(symbol_table_stack->symbol_table, lexical_value.label);
-  if (value.nature == SYMBOL_NATURE_UNEXISTENT)
-  {
-    return find_variable_value_in_stack_by_lexical_value(symbol_table_stack->next, lexical_value);
-  }
-  else
-  {
-    return value;
-  }
-}
-
-// find function value in stack by lexical value
-SymbolTableItemValue find_function_value_in_stack_by_lexical_value(Stack *symbol_table_stack, LexicalValue lexical_value)
-{
-  if (!symbol_table_stack)
-  {
-    print_error("ERR_UNDECLARED", lexical_value.line_number, "failed to use undeclared function", lexical_value.label, -1);
-    free_global_variables();
-    exit(ERR_UNDECLARED);
-  }
-
-  SymbolTableItemValue value = find_item_value_by_key(symbol_table_stack->symbol_table, lexical_value.label);
-  if (value.nature == SYMBOL_NATURE_UNEXISTENT)
-  {
-    return find_function_value_in_stack_by_lexical_value(symbol_table_stack->next, lexical_value);
-  }
-  else
-  {
-    return value;
-  }
-}
-
-// validate variable use
-void validate_variable_use(SymbolTableItemValue symbol, LexicalValue lexical_value)
-{
-  if (symbol.nature != SYMBOL_NATURE_VARIABLE)
-  {
-    print_error("ERR_FUNCTION", lexical_value.line_number, "failed to use as a variable", symbol.lexical_value.label, -1);
-    free_global_variables();
-    if (symbol.nature == SYMBOL_NATURE_FUNCTION)
+    print_error("ERR_FUNCTION", lexical_value.line_number, "failed to use as a variable", value.lexical_value.label, -1);
+    free_ast_and_stack();
+    if (value.nature == SYMBOL_NATURE_FUNCTION)
       exit(ERR_FUNCTION);
   }
 }
 
-// validate function call
-void validate_function_call(SymbolTableItemValue symbol, LexicalValue lexical_value)
+// validate function call use and print error if function is not declared
+void validate_function_use(SymbolTableItemValue value, LexicalValue lexical_value)
 {
-  if (symbol.nature != SYMBOL_NATURE_FUNCTION)
+  if (value.nature != SYMBOL_NATURE_FUNCTION)
   {
-    print_error("ERR_VARIABLE", lexical_value.line_number, "failed to use as a function call", symbol.lexical_value.label, -1);
-    free_global_variables();
-    if (symbol.nature == SYMBOL_NATURE_VARIABLE)
+    print_error("ERR_VARIABLE", lexical_value.line_number, "failed to use as a function call", value.lexical_value.label, -1);
+    free_ast_and_stack();
+    if (value.nature == SYMBOL_NATURE_VARIABLE)
       exit(ERR_VARIABLE);
   }
 }
 
-// free global variables
-void free_global_variables()
+// find variable value in symbol table stack by lexical value
+SymbolTableItemValue find_variable_value_in_stack_by_lexical_value(Stack *stack, LexicalValue lexical_value)
 {
-  free_ast(tree);
-  free_symbol_table_stack(stack);
-  yylex_destroy();
-}
-
-// free symbol table stack
-void free_symbol_table_stack(Stack *symbol_table_stack)
-{
-  if (!symbol_table_stack)
-    return;
-
-  free_symbol_table_stack(symbol_table_stack->next);
-
-  free_symbol_table(symbol_table_stack->symbol_table);
-
-  free(symbol_table_stack);
-  symbol_table_stack = NULL;
-}
-
-// pop stack
-Stack *pop_stack(Stack *symbol_table_stack)
-{
-  if (!symbol_table_stack)
-    return NULL;
-
-  free_symbol_table(symbol_table_stack->symbol_table);
-
-  Stack *next_item = symbol_table_stack->next;
-
-  free(symbol_table_stack);
-  symbol_table_stack = NULL;
-
-  return next_item;
-}
-
-// free parameters
-void free_parameters(Parameter *parameter)
-{
-  if (!parameter)
-    return;
-
-  free_parameters(parameter->next);
-
-  free(parameter);
-  parameter = NULL;
-}
-
-// free item value
-void free_item_value(SymbolTableItemValue value)
-{
-  free_parameters(value.parameters);
-  free_lexical_value(value.lexical_value);
-}
-
-// free item
-void free_item(SymbolTableItem item)
-{
-  free_item_value(item.value);
-  if (item.key)
+  if (!stack)
   {
-    free(item.key);
-    item.key = NULL;
+    print_error("ERR_UNDECLARED", lexical_value.line_number, "failed to use undeclared variable", lexical_value.label, -1);
+    free_ast_and_stack();
+    exit(ERR_UNDECLARED);
+  }
+
+  SymbolTableItemValue value = find_item_value_by_key(stack->symbol_table, lexical_value.label);
+  if (value.nature == SYMBOL_NATURE_UNEXISTENT)
+  {
+    return find_variable_value_in_stack_by_lexical_value(stack->next, lexical_value);
+  }
+  else
+  {
+    return value;
   }
 }
 
-// free table
-void free_table(SymbolTable *table)
+// find function value in symbol table stack by lexical value
+SymbolTableItemValue find_function_value_in_stack_by_lexical_value(Stack *stack, LexicalValue lexical_value)
 {
-  for (size_t index = 0; index < table->capacity; index++)
+  if (!stack)
   {
-    free_item(table->items[index]);
+    print_error("ERR_UNDECLARED", lexical_value.line_number, "failed to use undeclared function", lexical_value.label, -1);
+    free_ast_and_stack();
+    exit(ERR_UNDECLARED);
   }
-  free(table->items);
-  table->items = NULL;
+
+  SymbolTableItemValue value = find_item_value_by_key(stack->symbol_table, lexical_value.label);
+  if (value.nature == SYMBOL_NATURE_UNEXISTENT)
+  {
+    return find_function_value_in_stack_by_lexical_value(stack->next, lexical_value);
+  }
+  else
+  {
+    return value;
+  }
 }
 
-// free symbol table
-void free_symbol_table(SymbolTable *table)
+// find item value in symbol table by key and return unexistent value if not found
+SymbolTableItemValue find_item_value_by_key(SymbolTable *symbol_table, char *key)
 {
-  if (!table)
-    return;
+  if (!symbol_table || !key)
+    return get_unexistent_value();
 
-  free_table(table);
+  for (int i = 0; i < symbol_table->max_size; i++)
+  {
+    SymbolTableItem item = symbol_table->items[i];
+    if (item.key && strcmp(item.key, key) == 0)
+    {
+      return item.value;
+    }
+  }
 
-  free(table);
-  table = NULL;
+  return get_unexistent_value();
 }
 
-// print stack
-void print_stack(Stack *symbol_table_stack)
+// helper function to get string representation of data type
+char *get_type_string(DataType type)
 {
-  if (!symbol_table_stack)
+  switch (type)
+  {
+  case DATA_TYPE_INT:
+    return "int";
+  case DATA_TYPE_FLOAT:
+    return "float";
+  case DATA_TYPE_UNDECLARED:
+    return "undeclared";
+  default:
+    return "unknown";
+  }
+}
+
+// helper function to get string representation of symbol nature
+char *get_nature_string(SymbolNatureEnum nature)
+{
+  switch (nature)
+  {
+  case SYMBOL_NATURE_VARIABLE:
+    return "variable";
+  case SYMBOL_NATURE_FUNCTION:
+    return "function";
+  default:
+    return "unknown";
+  }
+}
+
+// helper function to get unexistent value
+SymbolTableItemValue get_unexistent_value()
+{
+  SymbolTableItemValue value;
+  value.nature = SYMBOL_NATURE_UNEXISTENT;
+
+  return value;
+}
+
+// helper function to print error message following the pattern
+void print_error(const char *error_type, int line_number, const char *message, const char *label, int previous_line_number)
+{
+  if (previous_line_number != -1)
+  {
+    printf("%s (line %d): %s \"%s\" that was declared before (line %d)\n", error_type, line_number, message, label, previous_line_number);
+  }
+  else
+  {
+    printf("%s (line %d): %s \"%s\"\n", error_type, line_number, message, label);
+  }
+}
+
+// helper function to print symbol table stack
+void print_stack(Stack *stack)
+{
+  if (!stack)
     return;
-  if (!symbol_table_stack->symbol_table)
+  if (!stack->symbol_table)
     return;
 
-  SymbolTable *table = symbol_table_stack->symbol_table;
+  SymbolTable *table = stack->symbol_table;
 
-  printf("---->> TABLE <<----\n");
-  for (size_t index = 0; index < table->capacity; index++)
+  printf("---->> TABLE [%p] <<----\n", (void *)table);
+  for (size_t index = 0; index < table->max_size; index++)
   {
     SymbolTableItem item = table->items[index];
     if (item.key)
@@ -400,75 +384,88 @@ void print_stack(Stack *symbol_table_stack)
   }
   printf("---->> END <<----\n\n");
 
-  print_stack(symbol_table_stack->next);
+  print_stack(stack->next);
 }
 
-// convert data type enum item to string
-char *get_type_string(DataType type)
+void free_ast_and_stack()
 {
-  switch (type)
+  free_ast(tree);
+  free_stack(stack);
+  yylex_destroy();
+}
+
+void free_stack(Stack *stack)
+{
+  if (!stack)
+    return;
+
+  free_stack(stack->next);
+
+  free_symbol_table(stack->symbol_table);
+
+  free(stack);
+  stack = NULL;
+}
+
+void free_parameters(Parameter *parameter)
+{
+  if (!parameter)
+    return;
+
+  free_parameters(parameter->next);
+
+  free(parameter);
+  parameter = NULL;
+}
+
+void free_item_value(SymbolTableItemValue value)
+{
+  free_parameters(value.parameters);
+  free_lexical_value(value.lexical_value);
+}
+
+void free_item(SymbolTableItem item)
+{
+  free_item_value(item.value);
+  if (item.key)
   {
-  case DATA_TYPE_INT:
-    return "int";
-  case DATA_TYPE_FLOAT:
-    return "float";
-  case DATA_TYPE_UNDECLARED:
-    return "undeclared";
-  default:
-    return "unknown";
+    free(item.key);
+    item.key = NULL;
   }
 }
 
-// convert nature enum item to string
-char *get_nature_string(SymbolNatureEnum nature)
+void free_table(SymbolTable *table)
 {
-  switch (nature)
+  for (size_t index = 0; index < table->max_size; index++)
   {
-  case SYMBOL_NATURE_VARIABLE:
-    return "variable";
-  case SYMBOL_NATURE_FUNCTION:
-    return "function";
-  default:
-    return "unknown";
+    free_item(table->items[index]);
   }
+  free(table->items);
+  table->items = NULL;
 }
 
-// get new item value with unexistent nature
-SymbolTableItemValue get_unexistent_value()
+void free_symbol_table(SymbolTable *table)
 {
-  SymbolTableItemValue value;
-  value.nature = SYMBOL_NATURE_UNEXISTENT;
+  if (!table)
+    return;
 
-  return value;
+  free_table(table);
+
+  free(table);
+  table = NULL;
 }
 
-// find item value by key in symbol table
-SymbolTableItemValue find_item_value_by_key(SymbolTable *symbol_table, char *key)
+Stack *pop_stack(Stack *stack)
 {
-  if (!symbol_table || !key)
-    return get_unexistent_value();
+  if (!stack)
+    return NULL;
 
-  for (int i = 0; i < symbol_table->capacity; i++)
-  {
-    SymbolTableItem item = symbol_table->items[i];
-    if (item.key && strcmp(item.key, key) == 0)
-    {
-      return item.value;
-    }
-  }
+  free_symbol_table(stack->symbol_table);
 
-  return get_unexistent_value();
-}
+  Stack *next_item = stack->next;
 
-// print error message with pattern
-void print_error(const char *error_type, int line_number, const char *message, const char *label, int previous_line_number)
-{
-  if (previous_line_number != -1)
-  {
-    printf("%s (line %d): %s \"%s\" that was declared before (line %d)\n", error_type, line_number, message, label, previous_line_number);
-  }
-  else
-  {
-    printf("%s (line %d): %s \"%s\"\n", error_type, line_number, message, label);
-  }
+  free(stack);
+  stack = NULL;
+
+  return next_item;
 }

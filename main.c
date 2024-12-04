@@ -10,12 +10,7 @@ Stack *stack;
 
 int main(int argc, char **argv)
 {
-  init_stack();
-
   int ret = yyparse();
   yylex_destroy();
-
-  // print_stack(stack);
-
   return ret;
 }

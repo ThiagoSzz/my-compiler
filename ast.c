@@ -11,13 +11,13 @@
 #include "ast.h"
 
 // create node with lexical value and symbol table item value
-Node *create_node_with_value(LexicalValue lexical_value, SymbolTableItemValue value)
+Node *create_node_from_value(LexicalValue lexical_value, SymbolTableItemValue value)
 {
   return initialize_node(lexical_value, value.type);
 }
 
 // create node with lexical value and data type
-Node *create_node_with_type(LexicalValue lexical_value, DataType type)
+Node *create_node_from_type(LexicalValue lexical_value, DataType type)
 {
   return initialize_node(lexical_value, type);
 }
@@ -37,13 +37,13 @@ Node *create_node_from_unary_operator(LexicalValue lexical_value, Node *child)
 // create node from binary operator
 Node *create_node_from_binary_operator(LexicalValue lexical_value, Node *left_child, Node *right_child)
 {
-  return initialize_node(lexical_value, type_inference(left_child, right_child));
+  return initialize_node(lexical_value, get_type_inference_rules(left_child, right_child));
 }
 
 // create function call node with lexical value and symbol table item value
-Node *create_function_call_node_with_value(LexicalValue lexical_value, SymbolTableItemValue value)
+Node *create_function_call_node_from_value(LexicalValue lexical_value, SymbolTableItemValue value)
 {
-  Node *function_call_node = create_node_with_value(lexical_value, value);
+  Node *function_call_node = create_node_from_value(lexical_value, value);
 
   // add "call " prefix to label
   char *prefix = "call ";
@@ -60,30 +60,15 @@ Node *create_function_call_node_with_value(LexicalValue lexical_value, SymbolTab
   return function_call_node;
 }
 
-// infer data type from nodes
-DataType type_inference(Node *node_one, Node *node_two)
+// infer data type from nodes types
+DataType get_type_inference_rules(Node *node_one, Node *node_two)
 {
   if (node_one->data_type == node_two->data_type)
     return node_one->data_type;
-
-  if (data_types_are_int_and_float(node_one->data_type, node_two->data_type))
+  else
     return DATA_TYPE_FLOAT;
 
   return DATA_TYPE_UNDECLARED;
-}
-
-// check if the data types are int and float
-int data_types_are_int_and_float(DataType type_one, DataType type_two)
-{
-  if (type_one == DATA_TYPE_INT && type_two == DATA_TYPE_FLOAT)
-  {
-    return 1;
-  }
-  if (type_one == DATA_TYPE_FLOAT && type_two == DATA_TYPE_INT)
-  {
-    return 1;
-  }
-  return 0;
 }
 
 // get last child of parent node
@@ -143,7 +128,7 @@ void free_ast(Node *node)
   free(node);
 }
 
-// helper: initialize common fields of node
+// helper function to initialize common fields of node
 Node *initialize_node(LexicalValue lexical_value, DataType data_type)
 {
   Node *node = (Node *)malloc(sizeof(Node));
@@ -156,7 +141,7 @@ Node *initialize_node(LexicalValue lexical_value, DataType data_type)
   return node;
 }
 
-// helper: print node labels using recursive DFS
+// helper function to print node labels using recursive DFS
 void print_nodes(Node *node)
 {
   printf("%p [label=\"%s\"];\n", node, node->lexical_value.label);
@@ -170,7 +155,7 @@ void print_nodes(Node *node)
   }
 }
 
-// helper: print node connections using recursive DFS
+// helper function to print node connections using recursive DFS
 void print_edges(Node *node)
 {
   if (node->parent)
@@ -187,7 +172,7 @@ void print_edges(Node *node)
   }
 }
 
-// helper: export AST
+// helper function to export AST
 void export_ast(Node *node)
 {
   if (!node)
