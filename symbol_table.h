@@ -121,9 +121,9 @@ void validate_function_use(SymbolTableItemValue value, LexicalValue lexical_valu
 /* -->>          Find Functions          <<-- */
 ////////////////////////////////////////////////
 
-SymbolTableItemValue find_variable_value_in_stack_by_lexical_value(Stack *stack, LexicalValue lexical_value);
+SymbolTableItemValue find_variable_value_by_lexical_value(Stack *stack, LexicalValue lexical_value);
 
-SymbolTableItemValue find_function_value_in_stack_by_lexical_value(Stack *stack, LexicalValue lexical_value);
+SymbolTableItemValue find_function_value_by_lexical_value(Stack *stack, LexicalValue lexical_value);
 
 SymbolTableItemValue find_item_value_by_key(SymbolTable *symbol_table, char *key);
 
@@ -151,11 +151,11 @@ void free_stack(Stack *stack);
 
 void free_parameters(Parameter *parameter);
 
-void free_item_value(SymbolTableItemValue value);
+void free_table_item_value(SymbolTableItemValue value);
 
-void free_item(SymbolTableItem item);
+void free_table_item(SymbolTableItem item);
 
-void free_table(SymbolTable *table);
+void free_table_item_list(SymbolTable *table);
 
 void free_symbol_table(SymbolTable *table);
 

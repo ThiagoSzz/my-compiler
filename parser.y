@@ -118,7 +118,6 @@ start_program:
 
 end_program:
   {
-    // print_stack(stack);
     free_stack(stack);
   }
 
@@ -363,11 +362,11 @@ variable_list:
 
 variable_assignment: TK_IDENTIFICADOR '=' expression
   {
-    SymbolTableItemValue value = find_variable_value_in_stack_by_lexical_value(stack, $1);
+    SymbolTableItemValue value = find_variable_value_by_lexical_value(stack, $1);
     validate_variable_use(value, $1);
 
     Node* identifier = create_node_from_type($1, value.type);
-    $$ = create_node_from_assignment($2, identifier, $3);
+    $$ = create_node_from_inferred_type($2, identifier, $3);
     add_child($$, identifier);
     add_child($$, $3);
   }
@@ -376,7 +375,7 @@ variable_assignment: TK_IDENTIFICADOR '=' expression
 function_call: 
   TK_IDENTIFICADOR '(' list_of_arguments ')'
   {
-    SymbolTableItemValue value = find_function_value_in_stack_by_lexical_value(stack, $1);
+    SymbolTableItemValue value = find_function_value_by_lexical_value(stack, $1);
     validate_function_use(value, $1);
 
     $$ = create_function_call_node_from_value($1, value);
@@ -386,7 +385,7 @@ function_call:
   }
   | TK_IDENTIFICADOR '(' ')'
   {
-    SymbolTableItemValue value = find_function_value_in_stack_by_lexical_value(stack, $1);
+    SymbolTableItemValue value = find_function_value_by_lexical_value(stack, $1);
     validate_function_use(value, $1);
 
     $$ = create_function_call_node_from_value($1, value);
@@ -410,7 +409,7 @@ list_of_arguments:
 
 return_command: TK_PR_RETURN expression
   {
-    $$ = create_node_from_unary_operator($1, $2);
+    $$ = create_node_from_child_type($1, $2);
     add_child($$, $2);
   }
   ;
@@ -429,14 +428,14 @@ flow_control_statements:
 if_else_statement: 
   TK_PR_IF '(' expression end_if_else_statement block
   {
-    $$ = create_node_from_unary_operator($1, $3);
+    $$ = create_node_from_child_type($1, $3);
     add_child($$, $3);
     add_child($$, $5);
     free_lexical_value($2);
   }
   | TK_PR_IF '(' expression end_if_else_statement block TK_PR_ELSE block
   {
-    $$ = create_node_from_unary_operator($1, $3);
+    $$ = create_node_from_child_type($1, $3);
     add_child($$, $3);
     add_child($$, $5);
     add_child($$, $7);
@@ -456,7 +455,7 @@ end_if_else_statement: ')'
 
 while_statement: TK_PR_WHILE '(' expression end_while_statement block
   {
-    $$ = create_node_from_unary_operator($1, $3);
+    $$ = create_node_from_child_type($1, $3);
     add_child($$, $3);
     add_child($$, $5);
     free_lexical_value($2);
@@ -484,7 +483,7 @@ expression: precedence_8_operators
 precedence_8_operators:
   precedence_8_operators TK_OC_OR precedence_7_operators
   {
-    $$ = create_node_from_binary_operator($2, $1, $3);
+    $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
   }
@@ -497,7 +496,7 @@ precedence_8_operators:
 precedence_7_operators:
   precedence_7_operators TK_OC_AND precedence_6_operators
   {
-    $$ = create_node_from_binary_operator($2, $1, $3);
+    $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
   }
@@ -510,13 +509,13 @@ precedence_7_operators:
 precedence_6_operators:
   precedence_6_operators TK_OC_EQ precedence_5_operators
   {
-    $$ = create_node_from_binary_operator($2, $1, $3);
+    $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
   }
   | precedence_6_operators TK_OC_NE precedence_5_operators
   {
-    $$ = create_node_from_binary_operator($2, $1, $3);
+    $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
   }
@@ -529,25 +528,25 @@ precedence_6_operators:
 precedence_5_operators:
   precedence_5_operators '<' precedence_4_operators
   {
-    $$ = create_node_from_binary_operator($2, $1, $3);
+    $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
   }
   | precedence_5_operators '>' precedence_4_operators
   {
-    $$ = create_node_from_binary_operator($2, $1, $3);
+    $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
   }
   | precedence_5_operators TK_OC_LE precedence_4_operators
   {
-    $$ = create_node_from_binary_operator($2, $1, $3);
+    $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
   }
   | precedence_5_operators TK_OC_GE precedence_4_operators
   {
-    $$ = create_node_from_binary_operator($2, $1, $3);
+    $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
   }
@@ -560,13 +559,13 @@ precedence_5_operators:
 precedence_4_operators:
   precedence_4_operators '+' precedence_3_operators
   {
-    $$ = create_node_from_binary_operator($2, $1, $3);
+    $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
   }
   | precedence_4_operators '-' precedence_3_operators
   {
-    $$ = create_node_from_binary_operator($2, $1, $3);
+    $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
   }
@@ -579,19 +578,19 @@ precedence_4_operators:
 precedence_3_operators:
   precedence_3_operators '*' precedence_2_operators
   {
-    $$ = create_node_from_binary_operator($2, $1, $3);
+    $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
   }
   | precedence_3_operators '/' precedence_2_operators
   {
-    $$ = create_node_from_binary_operator($2, $1, $3);
+    $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
   }
   | precedence_3_operators '%' precedence_2_operators
   {
-    $$ = create_node_from_binary_operator($2, $1, $3);
+    $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
   }
@@ -604,12 +603,12 @@ precedence_3_operators:
 precedence_2_operators:
   '-' operand
   {
-    $$ = create_node_from_unary_operator($1, $2);
+    $$ = create_node_from_child_type($1, $2);
     add_child($$, $2);
   }
   | '!' operand
   {
-    $$ = create_node_from_unary_operator($1, $2);
+    $$ = create_node_from_child_type($1, $2);
     add_child($$, $2);
   }
   | operand
@@ -621,7 +620,7 @@ precedence_2_operators:
 operand:
   TK_IDENTIFICADOR
   {
-    SymbolTableItemValue value = find_variable_value_in_stack_by_lexical_value(stack, $1);
+    SymbolTableItemValue value = find_variable_value_by_lexical_value(stack, $1);
     validate_variable_use(value, $1);
 
     $$ = create_node_from_type($1, value.type);

@@ -32,7 +32,7 @@ symbol_table:
 
 deliverable:
 	make clean
-	tar cvzf etapa$(ETAPA).tgz ${DELIVERABLE_FILES}
+	tar --exclude='.*' -cvzf etapa$(ETAPA).tgz ${DELIVERABLE_FILES}
 
 clean:
 	rm -rf *.o *.yy.* *.tab.* etapa$(ETAPA).* ./etapa$(ETAPA)

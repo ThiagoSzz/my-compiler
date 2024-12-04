@@ -34,7 +34,15 @@ typedef struct
   char *label;
 } LexicalValue;
 
+////////////////////////////////////////////////
+/* -->>        Creation Functions        <<-- */
+////////////////////////////////////////////////
+
 LexicalValue create_lexical_value(char *value, TokenTypeEnum token_type, LiteralTypeEnum literal_type, int line_number);
+
+////////////////////////////////////////////////
+/* -->>          Free Functions          <<-- */
+////////////////////////////////////////////////
 
 void free_lexical_value(LexicalValue lexical_value);
 
