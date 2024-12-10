@@ -57,24 +57,6 @@ To run the compiler, execute the following command in terminal:
 > [!TIP]
 > You can run the compiler with an input file by using `./etapaX < filename` (e.g `./etapaX < input.txt`).
 
-### Test
-
-To test the compiler, you can use the `run_tests.sh` script. First, you might need to give executable permissions to it using:
-
-```bash
-chmod +x run_tests.sh
-```
-> [!NOTE]
-> This is only necessary for a linux-based OS/macOS.
-
-After that, you can run the script using:
-
-```bash
-sh run_tests.sh
-```
-
-The test script also runs automatically in a github action executed for each commit in a pull request.
-
 ### Clean
 
 If you want to clean up your environment (delete generated files and executable), you can use the following command:
