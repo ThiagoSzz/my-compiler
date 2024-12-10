@@ -9,15 +9,15 @@
 
 typedef enum
 {
-  IDENTIFIER,
-  LITERAL,
-  NOT_RELEVANT
+  TOKEN_TYPE_IDENTIFIER,
+  TOKEN_TYPE_LITERAL,
+  TOKEN_TYPE_NOT_RELEVANT
 } TokenTypeEnum;
 
 typedef enum
 {
-  INT,
-  FLOAT,
+  LITERAL_TYPE_INT,
+  LITERAL_TYPE_FLOAT,
   NOT_A_LITERAL
 } LiteralTypeEnum;
 
@@ -34,7 +34,15 @@ typedef struct
   char *label;
 } LexicalValue;
 
+////////////////////////////////////////////////
+/* -->>        Creation Functions        <<-- */
+////////////////////////////////////////////////
+
 LexicalValue create_lexical_value(char *value, TokenTypeEnum token_type, LiteralTypeEnum literal_type, int line_number);
+
+////////////////////////////////////////////////
+/* -->>          Free Functions          <<-- */
+////////////////////////////////////////////////
 
 void free_lexical_value(LexicalValue lexical_value);
 

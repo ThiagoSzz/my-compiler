@@ -5,22 +5,32 @@
 /*---------------------------*/
 
 %{
-  #include <stdio.h>
-
-  #include "ast.h"
-  #include "lexical_value.h"
+  #include "common_types.h"
 
   int yylex(void);
   void yyerror (char const *mensagem);
   int get_line_number();
 
-  extern void *arvore;
+  DataType data_type = DATA_TYPE_UNDECLARED;
 %}
+
+%code requires {
+  #include <stdio.h>
+
+  #include "ast.h"
+  #include "lexical_value.h"
+  #include "symbol_table.h"
+
+  extern Node *tree;
+  extern Stack *stack;
+}
 
 %union
 {
+  DataType DataType;
   LexicalValue LexicalValue;
-  struct Node* Node;
+  struct Node *Node;
+  struct Parameter *Parameter;
 }
 
 %define parse.error verbose
@@ -44,28 +54,32 @@
 %token TK_ERRO
 
 %type<Node> program
+%type<Node> start_program
+%type<Node> end_program
 %type<Node> list_of_functions
-%type<Node> type
+%type<DataType> type
 %type<Node> literal
 %type<Node> function
 %type<Node> function_signature
-%type<Node> list_of_parameters
-%type<Node> parameter
+%type<Parameter> list_of_parameters
 %type<Node> function_body
 %type<Node> block
+%type<Node> start_of_block
+%type<Node> end_of_block
 %type<Node> commands
 %type<Node> simple_command
 %type<Node> end_of_command
 %type<Node> variable_declaration
 %type<Node> variable_list
-%type<Node> declaration
 %type<Node> variable_assignment
 %type<Node> function_call
 %type<Node> list_of_arguments
 %type<Node> return_command
 %type<Node> flow_control_statements
 %type<Node> if_else_statement
+%type<Node> end_if_else_statement
 %type<Node> while_statement
+%type<Node> end_while_statement
 %type<Node> expression
 %type<Node> precedence_8_operators
 %type<Node> precedence_7_operators
@@ -85,17 +99,27 @@
 ///////////////////////////////
 
 program:
-  list_of_functions 
+  start_program list_of_functions end_program
   {
     $$ = $1;
-    arvore = $$;
+    tree = $$;
   }
   | 
   {
     $$ = NULL;
-    arvore = $$;
+    tree = $$;
   }
   ;
+
+start_program:
+  {
+    init_stack();
+  }
+
+end_program:
+  {
+    free_stack(stack);
+  }
 
 list_of_functions:
   function list_of_functions
@@ -116,12 +140,16 @@ list_of_functions:
 type: 
   TK_PR_INT
   {
-    $$ = NULL;
+    data_type = DATA_TYPE_INT;
+    $$ = data_type;
+    
     free_lexical_value($1);
   }
   | TK_PR_FLOAT
   {
-    $$ = NULL;
+    data_type = DATA_TYPE_FLOAT;
+    $$ = data_type;
+
     free_lexical_value($1);
   }
   ;
@@ -133,11 +161,17 @@ type:
 literal: 
   TK_LIT_INT
   {
-    $$ = create_node($1);
+    SymbolTableItemValue value = create_symbol_table_value(SYMBOL_NATURE_UNEXISTENT, $1, DATA_TYPE_INT);
+    insert_value_into_stack(stack, value);
+
+    $$ = create_node_from_value($1, value);
   }
   | TK_LIT_FLOAT
   {
-    $$ = create_node($1);
+    SymbolTableItemValue value = create_symbol_table_value(SYMBOL_NATURE_UNEXISTENT, $1, DATA_TYPE_FLOAT);
+    insert_value_into_stack(stack, value);
+
+    $$ = create_node_from_value($1, value);
   }
   ;
 
@@ -154,34 +188,40 @@ function: function_signature function_body
 
 function_signature: TK_IDENTIFICADOR '=' list_of_parameters '>' type
   {
-    $$ = create_node($1);
+    validate_function_declaration(stack->next, $1);
+    stack = create_table_on_stack(stack);
+    SymbolTableItemValue value = create_symbol_table_value_with_parameters(SYMBOL_NATURE_FUNCTION, $1, $5, $3);
+    insert_value_into_next_table(stack, value);
+
+    $$ = create_node_from_value($1, value);
     free_lexical_value($2);
     free_lexical_value($4);
   }
   ;
 
 list_of_parameters:
-  parameter TK_OC_OR list_of_parameters
+  TK_IDENTIFICADOR '<''-' type
   {
-    $$ = $3;
+    $$ = create_function_parameter($1, $4);
     free_lexical_value($2);
+    free_lexical_value($3);
+
+    SymbolTableItemValue value = create_symbol_table_value(SYMBOL_NATURE_VARIABLE, $1, $4);
+    insert_value_into_stack(stack, value);
   }
-  | parameter
+  | TK_IDENTIFICADOR '<''-' type TK_OC_OR list_of_parameters
   {
-    $$ = $1;
+    $$ = insert_new_parameter($6, $1, $4);
+    free_lexical_value($2);
+    free_lexical_value($3);
+    free_lexical_value($5);
+
+    SymbolTableItemValue value = create_symbol_table_value(SYMBOL_NATURE_VARIABLE, $1, $4);
+    insert_value_into_stack(stack, value);
   }
   | 
   {
     $$ = NULL;
-  }
-  ;
-
-parameter: TK_IDENTIFICADOR '<''-' type
-  {
-    $$ = NULL;
-    free_lexical_value($1);
-    free_lexical_value($2);
-    free_lexical_value($3);
   }
   ;
 
@@ -196,17 +236,26 @@ function_body: block
 ///////////////////////////////
 
 block: 
-  '{' commands '}'
+  start_of_block commands end_of_block
   {
     $$ = $2;
-    free_lexical_value($1);
-    free_lexical_value($3);
   }
-  | '{' '}'
+  | start_of_block end_of_block
   {
     $$ = NULL;
-    free_lexical_value($1);
-    free_lexical_value($2);
+  }
+  ;
+
+start_of_block: '{'
+  {
+    SymbolTable *block_symbol_table = create_symbol_table();
+    stack = insert_table_into_stack(stack, block_symbol_table);
+  }
+  ;
+
+end_of_block: '}'
+  {
+    stack = pop_stack(stack);
   }
   ;
 
@@ -272,41 +321,53 @@ variable_declaration: type variable_list
   }
   ;
 
-variable_list:
-  declaration ',' variable_list  
-  {
-    if ($1) {
-      $$ = $1;
-      add_child($$, $3);
-    } else {
-      $$ = $3;
-    }
+variable_list: 
+  TK_IDENTIFICADOR 
+  { 
+    $$ = NULL;
+
+    SymbolTableItemValue value = create_symbol_table_value(SYMBOL_NATURE_VARIABLE, $1, data_type);
+    insert_value_into_stack(stack, value);
+  }
+  | TK_IDENTIFICADOR ',' variable_list
+  { 
+    $$ = $3;
+
+    SymbolTableItemValue value = create_symbol_table_value(SYMBOL_NATURE_VARIABLE, $1, data_type);
+    insert_value_into_stack(stack, value);
+
     free_lexical_value($2);
   }
-  | declaration
+  | TK_IDENTIFICADOR TK_OC_LE literal 
   {
-    $$ = $1;
-  }
-  ;
+    SymbolTableItemValue value = create_symbol_table_value(SYMBOL_NATURE_VARIABLE, $1, data_type);
+    insert_value_into_stack(stack, value);
 
-declaration:
-  TK_IDENTIFICADOR TK_OC_LE literal
-  {
-    $$ = create_node($2);
-    add_child($$, create_node($1));
+    $$ = create_node_from_type($2, data_type);
+    add_child($$, create_node_from_value($1, value));
     add_child($$, $3);
   }
-  | TK_IDENTIFICADOR
-  {
-    $$ = NULL;
-    free_lexical_value($1);
+  | TK_IDENTIFICADOR TK_OC_LE literal ',' variable_list 
+  { 
+    SymbolTableItemValue value = create_symbol_table_value(SYMBOL_NATURE_VARIABLE, $1, data_type);
+    insert_value_into_stack(stack, value);
+    
+    $$ = create_node_from_type($2, data_type);
+    add_child($$, create_node_from_value($1, value));
+    add_child($$, $3);
+    add_child($$, $5);
+    free_lexical_value($4);
   }
   ;
 
 variable_assignment: TK_IDENTIFICADOR '=' expression
   {
-    $$ = create_node($2);
-    add_child($$, create_node($1));
+    SymbolTableItemValue value = find_variable_value_by_lexical_value(stack, $1);
+    validate_variable_use(value, $1);
+
+    Node* identifier = create_node_from_type($1, value.type);
+    $$ = create_node_from_inferred_type($2, identifier, $3);
+    add_child($$, identifier);
     add_child($$, $3);
   }
   ;
@@ -314,14 +375,20 @@ variable_assignment: TK_IDENTIFICADOR '=' expression
 function_call: 
   TK_IDENTIFICADOR '(' list_of_arguments ')'
   {
-    $$ = create_function_call_node($1);
+    SymbolTableItemValue value = find_function_value_by_lexical_value(stack, $1);
+    validate_function_use(value, $1);
+
+    $$ = create_function_call_node_from_value($1, value);
     add_child($$, $3);
     free_lexical_value($2);
     free_lexical_value($4);
   }
   | TK_IDENTIFICADOR '(' ')'
   {
-    $$ = create_function_call_node($1);
+    SymbolTableItemValue value = find_function_value_by_lexical_value(stack, $1);
+    validate_function_use(value, $1);
+
+    $$ = create_function_call_node_from_value($1, value);
     free_lexical_value($2);
     free_lexical_value($3);
   }
@@ -342,7 +409,7 @@ list_of_arguments:
 
 return_command: TK_PR_RETURN expression
   {
-    $$ = create_node($1);
+    $$ = create_node_from_child_type($1, $2);
     add_child($$, $2);
   }
   ;
@@ -359,35 +426,49 @@ flow_control_statements:
   ;
 
 if_else_statement: 
-  TK_PR_IF '(' expression ')' block
+  TK_PR_IF '(' expression end_if_else_statement block
   {
-    $$ = create_node($1);
+    $$ = create_node_from_child_type($1, $3);
     add_child($$, $3);
     add_child($$, $5);
     free_lexical_value($2);
-    free_lexical_value($4);
   }
-  | TK_PR_IF '(' expression ')' block TK_PR_ELSE block
+  | TK_PR_IF '(' expression end_if_else_statement block TK_PR_ELSE block
   {
-    $$ = create_node($1);
+    $$ = create_node_from_child_type($1, $3);
     add_child($$, $3);
     add_child($$, $5);
     add_child($$, $7);
     free_lexical_value($2);
-    free_lexical_value($4);
     free_lexical_value($6);
   }
   ;
 
-while_statement: TK_PR_WHILE '(' expression ')' block
+end_if_else_statement: ')' 
   {
-    $$ = create_node($1);
+    $$ = NULL;
+    free_lexical_value($1);
+
+    stack = create_table_on_stack(stack);
+  }
+  ;
+
+while_statement: TK_PR_WHILE '(' expression end_while_statement block
+  {
+    $$ = create_node_from_child_type($1, $3);
     add_child($$, $3);
     add_child($$, $5);
     free_lexical_value($2);
-    free_lexical_value($4);
   }
   ;
+
+end_while_statement: ')'
+  {
+    $$ = NULL;
+    free_lexical_value($1);
+
+    stack = create_table_on_stack(stack);
+  }
 
 ///////////////////////////////
 /* -->>   Expressions   <<-- */
@@ -402,7 +483,7 @@ expression: precedence_8_operators
 precedence_8_operators:
   precedence_8_operators TK_OC_OR precedence_7_operators
   {
-    $$ = create_node($2);
+    $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
   }
@@ -415,7 +496,7 @@ precedence_8_operators:
 precedence_7_operators:
   precedence_7_operators TK_OC_AND precedence_6_operators
   {
-    $$ = create_node($2);
+    $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
   }
@@ -428,13 +509,13 @@ precedence_7_operators:
 precedence_6_operators:
   precedence_6_operators TK_OC_EQ precedence_5_operators
   {
-    $$ = create_node($2);
+    $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
   }
   | precedence_6_operators TK_OC_NE precedence_5_operators
   {
-    $$ = create_node($2);
+    $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
   }
@@ -447,25 +528,25 @@ precedence_6_operators:
 precedence_5_operators:
   precedence_5_operators '<' precedence_4_operators
   {
-    $$ = create_node($2);
+    $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
   }
   | precedence_5_operators '>' precedence_4_operators
   {
-    $$ = create_node($2);
+    $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
   }
   | precedence_5_operators TK_OC_LE precedence_4_operators
   {
-    $$ = create_node($2);
+    $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
   }
   | precedence_5_operators TK_OC_GE precedence_4_operators
   {
-    $$ = create_node($2);
+    $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
   }
@@ -478,13 +559,13 @@ precedence_5_operators:
 precedence_4_operators:
   precedence_4_operators '+' precedence_3_operators
   {
-    $$ = create_node($2);
+    $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
   }
   | precedence_4_operators '-' precedence_3_operators
   {
-    $$ = create_node($2);
+    $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
   }
@@ -497,19 +578,19 @@ precedence_4_operators:
 precedence_3_operators:
   precedence_3_operators '*' precedence_2_operators
   {
-    $$ = create_node($2);
+    $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
   }
   | precedence_3_operators '/' precedence_2_operators
   {
-    $$ = create_node($2);
+    $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
   }
   | precedence_3_operators '%' precedence_2_operators
   {
-    $$ = create_node($2);
+    $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
   }
@@ -522,12 +603,12 @@ precedence_3_operators:
 precedence_2_operators:
   '-' operand
   {
-    $$ = create_node($1);
+    $$ = create_node_from_child_type($1, $2);
     add_child($$, $2);
   }
   | '!' operand
   {
-    $$ = create_node($1);
+    $$ = create_node_from_child_type($1, $2);
     add_child($$, $2);
   }
   | operand
@@ -539,7 +620,10 @@ precedence_2_operators:
 operand:
   TK_IDENTIFICADOR
   {
-    $$ = create_node($1);
+    SymbolTableItemValue value = find_variable_value_by_lexical_value(stack, $1);
+    validate_variable_use(value, $1);
+
+    $$ = create_node_from_type($1, value.type);
   }
   | literal
   {
@@ -564,5 +648,5 @@ operand:
 %%
 
 void yyerror (char const *message) {
-  printf("line %d: [%s]\n", get_line_number(), message);
+  printf("ERR_SYNTAX (line %d): %s\n", get_line_number(), message);
 }

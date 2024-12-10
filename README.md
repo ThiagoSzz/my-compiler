@@ -28,6 +28,13 @@ Project for a compiler made for a C-like language using [flex](https://github.co
 - Associates the values in the scanner
 - Prints the AST recursively using DFS
 
+### Iterate 4: Semantic Analysis
+
+- Creates the Symbol Table data structure
+- Builds the Symbol Table stack in the parser
+- Throws `ERR_UNDECLARED` (failed to use undeclared variable/function), `ERR_DECLARED` (failed to re-declare variable/function), `ERR_VARIABLE` (failed to use variable as a function call) and `ERR_FUNCTION` (failed to use function call as a variable) errors
+- Infers data types on expressions and variable assignments
+
 ## How to execute
 
 ### Build

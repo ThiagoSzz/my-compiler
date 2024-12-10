@@ -23,14 +23,14 @@ LexicalValue create_lexical_value(char *value, TokenTypeEnum token_type, Literal
   // NOT_A_LITERAL added to prevent warning
   switch (literal_type)
   {
-    case INT:
-      lexical_value.value.int_value = atoi(value);
-      break;
-    case FLOAT:
-      lexical_value.value.float_value = atof(value);
-      break;
-    case NOT_A_LITERAL:
-      break;
+  case LITERAL_TYPE_INT:
+    lexical_value.value.int_value = atoi(value);
+    break;
+  case LITERAL_TYPE_FLOAT:
+    lexical_value.value.float_value = atof(value);
+    break;
+  case NOT_A_LITERAL:
+    break;
   }
 
   return lexical_value;

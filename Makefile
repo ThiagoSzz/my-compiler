@@ -4,11 +4,11 @@
 # /*      Henrique Vazatta     */
 # /*---------------------------*/
 
-ETAPA = 3
-DELIVERABLE_FILES = main.c ast.c ast.h lexical_value.c lexical_value.h parser.y scanner.l Makefile README.md
+ETAPA = 4
+DELIVERABLE_FILES = main.c ast.c ast.h lexical_value.c lexical_value.h symbol_table.c symbol_table.h common_types.h errors.h parser.y scanner.l Makefile README.md
 
-all: bison flex main ast lexical_value
-	gcc main.o lex.yy.o parser.tab.o lexical_value.o ast.o -o etapa$(ETAPA)
+all: bison flex main ast lexical_value symbol_table
+	gcc main.o lex.yy.o parser.tab.o lexical_value.o ast.o symbol_table.o -o etapa$(ETAPA)
 
 bison:
 	bison -d parser.y
@@ -27,9 +27,12 @@ lexical_value:
 ast:
 	gcc -c ast.c
 
+symbol_table:
+	gcc -c symbol_table.c
+
 deliverable:
 	make clean
-	tar cvzf etapa$(ETAPA).tgz ${DELIVERABLE_FILES}
+	tar --exclude='.*' -cvzf etapa$(ETAPA).tgz ${DELIVERABLE_FILES}
 
 clean:
 	rm -rf *.o *.yy.* *.tab.* etapa$(ETAPA).* ./etapa$(ETAPA)
