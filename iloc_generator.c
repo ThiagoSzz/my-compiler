@@ -317,7 +317,7 @@ OperationList *generate_while_statement_code(struct Node *expression_node, struc
   return operation_list;
 }
 
-// generate code for unary logic expression (-, !)
+// generate code for unary arithmetic or logic expression (-, !)
 OperationList *generate_unary_expression_code(OperationsEnum operation_type, struct Node *node, int *output_register)
 {
   OperationList *operation_list = insert_new_operation_list(node->operation_list);

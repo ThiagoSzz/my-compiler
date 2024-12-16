@@ -35,6 +35,13 @@ Project for a compiler made for a C-like language using [flex](https://github.co
 - Throws `ERR_UNDECLARED` (failed to use undeclared variable/function), `ERR_DECLARED` (failed to re-declare variable/function), `ERR_VARIABLE` (failed to use variable as a function call) and `ERR_FUNCTION` (failed to use function call as a variable) errors
 - Infers data types on expressions and variable assignments
 
+### Iterate 5: Code Generation
+
+- Creates the Operation List data structure
+- Builds the Operation List in the parser
+- Implements variable declaration address logic (rfp, rbss)
+- Generates code for if statements (with/without else), while statements, unary expressions (negation, logical not), comparison expressions (==, !=, <, >, <=, >=), arithmetic expressions (+, -, *, /), loading identifiers (global/local) and storing identifiers (global/local)
+
 ## How to execute
 
 ### Build
