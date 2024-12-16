@@ -175,6 +175,263 @@ void generate_code(OperationList *operation_list)
   }
 }
 
+// generate code for if statement
+OperationList *generate_if_statement_code(struct Node *expression_node, struct Node *block_node)
+{
+  int expression_register = expression_node->output_register;
+  int if_false_register = get_register();
+  int cmp_register = get_register();
+
+  int if_true_label = get_label();
+  int if_false_label = get_label();
+
+  OperationList *operation_list = insert_new_operation_list(expression_node->operation_list);
+
+  Operation if_false_operation = create_operation(OPERATION_LOADI, 0, -1, if_false_register, -1);
+  insert_operation_into_list(operation_list, if_false_operation);
+
+  Operation cmp_operation = create_operation(OPERATION_CMP_NE, expression_register, if_false_register, cmp_register, -1);
+  insert_operation_into_list(operation_list, cmp_operation);
+
+  Operation branch_operation = create_operation(OPERATION_CBR, cmp_register, -1, if_true_label, if_false_label);
+  insert_operation_into_list(operation_list, branch_operation);
+
+  Operation if_true_label_operation = create_operation_from_type_and_label(OPERATION_NOP, if_true_label);
+  insert_operation_into_list(operation_list, if_true_label_operation);
+
+  if (block_node)
+  {
+    append_operation_list(operation_list, block_node->operation_list);
+  }
+
+  Operation if_false_label_operation = create_operation_from_type_and_label(OPERATION_NOP, if_false_label);
+  insert_operation_into_list(operation_list, if_false_label_operation);
+
+  return operation_list;
+}
+
+// generate code for if with mandatory else statement
+OperationList *generate_if_else_statement_code(struct Node *expression_node, struct Node *if_block_node, struct Node *else_block_node)
+{
+  int expression_register = expression_node->output_register;
+  int if_false_register = get_register();
+  int cmp_register = get_register();
+
+  int if_true_label = get_label();
+  int else_label = get_label();
+  int end_if_label = get_label();
+
+  OperationList *operation_list = insert_new_operation_list(expression_node->operation_list);
+
+  Operation if_false_operation = create_operation(OPERATION_LOADI, 0, -1, if_false_register, -1);
+  insert_operation_into_list(operation_list, if_false_operation);
+
+  Operation cmp_operation = create_operation(OPERATION_CMP_NE, expression_register, if_false_register, cmp_register, -1);
+  insert_operation_into_list(operation_list, cmp_operation);
+
+  Operation branch_operation = create_operation(OPERATION_CBR, cmp_register, -1, if_true_label, else_label);
+  insert_operation_into_list(operation_list, branch_operation);
+
+  Operation if_true_label_operation = create_operation_from_type_and_label(OPERATION_NOP, if_true_label);
+  insert_operation_into_list(operation_list, if_true_label_operation);
+
+  if (if_block_node)
+  {
+    append_operation_list(operation_list, if_block_node->operation_list);
+  }
+
+  Operation end_if_operation = create_operation(OPERATION_JUMPI, end_if_label, -1, -1, -1);
+  insert_operation_into_list(operation_list, end_if_operation);
+
+  Operation else_label_operation = create_operation_from_type_and_label(OPERATION_NOP, else_label);
+  insert_operation_into_list(operation_list, else_label_operation);
+
+  if (else_block_node)
+  {
+    append_operation_list(operation_list, else_block_node->operation_list);
+  }
+
+  Operation end_if_label_operation = create_operation_from_type_and_label(OPERATION_NOP, end_if_label);
+  insert_operation_into_list(operation_list, end_if_label_operation);
+
+  return operation_list;
+}
+
+// generate code for while statement
+OperationList *generate_while_statement_code(struct Node *expression_node, struct Node *block_node)
+{
+  int expression_register = expression_node->output_register;
+  int if_false_register = get_register();
+  int cmp_register = get_register();
+
+  int loop_comparison_label = get_label();
+  int if_true_label = get_label();
+  int if_false_label = get_label();
+
+  OperationList *operation_list = create_operation_list();
+
+  Operation if_false_operation = create_operation(OPERATION_LOADI, 0, -1, if_false_register, -1);
+  insert_operation_into_list(operation_list, if_false_operation);
+
+  Operation end_loop_comparison_operation = create_operation_from_type_and_label(OPERATION_NOP, loop_comparison_label);
+  insert_operation_into_list(operation_list, end_loop_comparison_operation);
+
+  append_operation_list(operation_list, expression_node->operation_list);
+
+  Operation cmp_operation = create_operation(OPERATION_CMP_NE, expression_register, if_false_register, cmp_register, -1);
+  insert_operation_into_list(operation_list, cmp_operation);
+
+  Operation branch_operation = create_operation(OPERATION_CBR, cmp_register, -1, if_true_label, if_false_label);
+  insert_operation_into_list(operation_list, branch_operation);
+
+  Operation if_true_label_operation = create_operation_from_type_and_label(OPERATION_NOP, if_true_label);
+  insert_operation_into_list(operation_list, if_true_label_operation);
+
+  if (block_node)
+  {
+    append_operation_list(operation_list, block_node->operation_list);
+  }
+
+  Operation end_loop_operation = create_operation(OPERATION_JUMPI, loop_comparison_label, -1, -1, -1);
+  insert_operation_into_list(operation_list, end_loop_operation);
+
+  Operation if_false_label_operation = create_operation_from_type_and_label(OPERATION_NOP, if_false_label);
+  insert_operation_into_list(operation_list, if_false_label_operation);
+
+  return operation_list;
+}
+
+// generate code for unary logic expression (-, !)
+OperationList *generate_unary_expression_code(OperationsEnum operation_type, struct Node *node, int *output_register)
+{
+  OperationList *operation_list = insert_new_operation_list(node->operation_list);
+
+  int r1 = node->output_register;
+  int r2 = get_register();
+
+  Operation operation = create_operation(operation_type, r1, -1, r2, -1);
+  insert_operation_into_list(operation_list, operation);
+
+  *output_register = r2;
+  return operation_list;
+}
+
+// generate code for binary logic expression (&, |)
+OperationList *generate_binary_expression_code(OperationsEnum operation_type, struct Node *left_node, struct Node *right_node, int *output_register)
+{
+  OperationList *operation_list = merge_operation_list(left_node->operation_list, right_node->operation_list);
+
+  int r1 = left_node->output_register;
+  int r2 = right_node->output_register;
+  int r3 = get_register();
+
+  Operation operation = create_operation(operation_type, r1, r2, r3, -1);
+  insert_operation_into_list(operation_list, operation);
+
+  *output_register = r3;
+  return operation_list;
+}
+
+// generate code for comparison expression (>=, <=, >, <, !=, ==)
+OperationList *generate_comparison_expression_code(OperationsEnum operation_type, struct Node *left_node, struct Node *right_node, int *output_register)
+{
+  OperationList *operation_list = merge_operation_list(left_node->operation_list, right_node->operation_list);
+
+  int r1 = left_node->output_register;
+  int r2 = right_node->output_register;
+  int r3 = get_register();
+  int r4 = get_register();
+  int if_true_label = get_label();
+  int if_false_label = get_label();
+  int end_if_label = get_label();
+
+  Operation cmp_operation = create_operation(operation_type, r1, r2, r3, -1);
+  insert_operation_into_list(operation_list, cmp_operation);
+
+  Operation branch_operation = create_operation(OPERATION_CBR, r3, -1, if_true_label, if_false_label);
+  insert_operation_into_list(operation_list, branch_operation);
+
+  Operation if_true_operation = create_operation_from_label(OPERATION_LOADI, if_true_label, 1, -1, r4, -1);
+  insert_operation_into_list(operation_list, if_true_operation);
+
+  Operation end_if_operation = create_operation(OPERATION_JUMPI, end_if_label, -1, -1, -1);
+  insert_operation_into_list(operation_list, end_if_operation);
+
+  Operation if_false_operation = create_operation_from_label(OPERATION_LOADI, if_false_label, 0, -1, r4, -1);
+  insert_operation_into_list(operation_list, if_false_operation);
+
+  Operation end_if_label_operation = create_operation_from_type_and_label(OPERATION_NOP, end_if_label);
+  insert_operation_into_list(operation_list, end_if_label_operation);
+
+  *output_register = r4;
+  return operation_list;
+}
+
+// generate code for arithmetic expression (+, -, *, /)
+OperationList *generate_arithmetic_expression_code(OperationsEnum operation_type, struct Node *left_node, struct Node *right_node, int *output_register)
+{
+  OperationList *operation_list = merge_operation_list(left_node->operation_list, right_node->operation_list);
+
+  int r1 = left_node->output_register;
+  int r2 = right_node->output_register;
+  int r3 = get_register();
+
+  Operation operation = create_operation(operation_type, r1, r2, r3, -1);
+  insert_operation_into_list(operation_list, operation);
+
+  *output_register = r3;
+  return operation_list;
+}
+
+// generate code for load identifier (global/local)
+OperationList *generate_load_identifier_code(SymbolTableItemValue value, int *output_register)
+{
+  OperationList *operation_list = create_operation_list();
+
+  int address = value.position;
+  int r1 = get_register();
+
+  Operation operation;
+
+  if (value.is_global)
+  {
+    operation = create_operation(OPERATION_LOADAI_GLOBAL, address, -1, r1, -1);
+  }
+  else
+  {
+    operation = create_operation(OPERATION_LOADAI_LOCAL, address, -1, r1, -1);
+  }
+
+  insert_operation_into_list(operation_list, operation);
+
+  *output_register = r1;
+  return operation_list;
+}
+
+// generate code for store identifier (global/local)
+OperationList *generate_store_identifier_code(SymbolTableItemValue value, struct Node *expression_node)
+{
+  OperationList *operation_list = insert_new_operation_list(expression_node->operation_list);
+
+  int address = value.position;
+  int r1 = expression_node->output_register;
+
+  Operation operation;
+
+  if (value.is_global)
+  {
+    operation = create_operation(OPERATION_STOREAI_GLOBAL, r1, -1, address, -1);
+  }
+  else
+  {
+    operation = create_operation(OPERATION_STOREAI_LOCAL, r1, -1, address, -1);
+  }
+
+  insert_operation_into_list(operation_list, operation);
+
+  return operation_list;
+}
+
 // creates empty operation list
 OperationList *create_operation_list()
 {
@@ -260,4 +517,16 @@ OperationList *merge_operation_list(OperationList *current_list, OperationList *
   append_operation_list(new_operation_list, new_list);
 
   return new_operation_list;
+}
+
+// frees operation list
+void free_operation_list(OperationList *operation_list)
+{
+  OperationList *current_list = operation_list;
+  while (current_list != NULL)
+  {
+    OperationList *next_list = current_list->next_operation_list;
+    free(current_list);
+    current_list = next_list;
+  }
 }

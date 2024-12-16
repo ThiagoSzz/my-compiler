@@ -13,9 +13,5 @@ Stack *stack;
 int main(int argc, char **argv)
 {
   int ret = yyparse();
-  if (main_function_scope->operation_list != NULL)
-  {
-    generate_code(main_function_scope->operation_list);
-  }
   return ret;
 }

@@ -9,11 +9,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "common_types.h"
+
+#include "ast.h"
 
 ////////////////////////////////////////////////
 /* -->>          Data Structures         <<-- */
 ////////////////////////////////////////////////
+
+struct Node; // forward definition to prevent warning
 
 typedef enum OperationsEnum
 {
@@ -82,6 +85,24 @@ void map_operation_to_instruction(Operation operation);
 
 void generate_code(OperationList *operation_list);
 
+OperationList *generate_if_statement_code(struct Node *expression_node, struct Node *block_node);
+
+OperationList *generate_if_else_statement_code(struct Node *expression_node, struct Node *if_block_node, struct Node *else_block_node);
+
+OperationList *generate_while_statement_code(struct Node *expression_node, struct Node *block_node);
+
+OperationList *generate_unary_expression_code(OperationsEnum operation_type, struct Node *node, int *output_register);
+
+OperationList *generate_binary_expression_code(OperationsEnum operation_type, struct Node *left_node, struct Node *right_node, int *output_register);
+
+OperationList *generate_comparison_expression_code(OperationsEnum operation_type, struct Node *left_node, struct Node *right_node, int *output_register);
+
+OperationList *generate_arithmetic_expression_code(OperationsEnum operation_type, struct Node *left_node, struct Node *right_node, int *output_register);
+
+OperationList *generate_load_identifier_code(SymbolTableItemValue value, int *output_register);
+
+OperationList *generate_store_identifier_code(SymbolTableItemValue value, struct Node *expression_node);
+
 ////////////////////////////////////////////////
 /* -->>        Creation Functions        <<-- */
 ////////////////////////////////////////////////
@@ -99,5 +120,11 @@ void insert_operation_into_list(OperationList *operation_list, Operation operati
 void append_operation_list(OperationList *current_list, OperationList *new_list);
 
 OperationList *merge_operation_list(OperationList *current_list, OperationList *new_list);
+
+////////////////////////////////////////////////
+/* -->>          Free Functions          <<-- */
+////////////////////////////////////////////////
+
+void free_operation_list(OperationList *operation_list);
 
 #endif // ILOC_GENERATOR_H
