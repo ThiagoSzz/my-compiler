@@ -90,6 +90,14 @@ void map_operation_to_instruction(Operation operation)
   case OPERATION_NOP:
     printf("nop \n");
     break;
+  // r3 = r1 + r2
+  case OPERATION_ADD:
+    printf("add r%d, r%d => r%d \n", operation.op1, operation.op2, operation.out1);
+    break;
+  // r3 = r1 - r2
+  case OPERATION_SUB:
+    printf("sub r%d, r%d => r%d \n", operation.op1, operation.op2, operation.out1);
+    break;
   // r3 = r1 * r2
   case OPERATION_MULT:
     printf("mult r%d, r%d => r%d \n", operation.op1, operation.op2, operation.out1);
@@ -102,18 +110,6 @@ void map_operation_to_instruction(Operation operation)
   case OPERATION_NEG:
     printf("rsubI r%d, 0 => r%d \n", operation.op1, operation.out1);
     break;
-  // r3 = r1 xor -1 (logical negation)
-  case OPERATION_NOT:
-    printf("xorI r%d, -1 => r%d \n", operation.op1, operation.out1);
-    break;
-  // r3 = r1 - r2
-  case OPERATION_SUB:
-    printf("sub r%d, r%d => r%d \n", operation.op1, operation.op2, operation.out1);
-    break;
-  // r3 = r1 + r2
-  case OPERATION_ADD:
-    printf("add r%d, r%d => r%d \n", operation.op1, operation.op2, operation.out1);
-    break;
   // r3 = r1 && r2
   case OPERATION_AND:
     printf("and r%d, r%d => r%d \n", operation.op1, operation.op2, operation.out1);
@@ -122,13 +118,9 @@ void map_operation_to_instruction(Operation operation)
   case OPERATION_OR:
     printf("or r%d, r%d => r%d \n", operation.op1, operation.op2, operation.out1);
     break;
-  // r3 = true if r1 >= r2, else false
-  case OPERATION_CMP_GE:
-    printf("cmp_GE r%d, r%d -> r%d \n", operation.op1, operation.op2, operation.out1);
-    break;
-  // r3 = true if r1 <= r2, else false
-  case OPERATION_CMP_LE:
-    printf("cmp_LE r%d, r%d -> r%d \n", operation.op1, operation.op2, operation.out1);
+  // r3 = r1 xor -1 (logical negation)
+  case OPERATION_NOT:
+    printf("xorI r%d, -1 => r%d \n", operation.op1, operation.out1);
     break;
   // r3 = true if r1 > r2, else false
   case OPERATION_CMP_GT:
@@ -138,13 +130,21 @@ void map_operation_to_instruction(Operation operation)
   case OPERATION_CMP_LT:
     printf("cmp_LT r%d, r%d -> r%d \n", operation.op1, operation.op2, operation.out1);
     break;
-  // r3 = true if r1 != r2, else false
-  case OPERATION_CMP_NE:
-    printf("cmp_NE r%d, r%d -> r%d \n", operation.op1, operation.op2, operation.out1);
+  // r3 = true if r1 >= r2, else false
+  case OPERATION_CMP_GE:
+    printf("cmp_GE r%d, r%d -> r%d \n", operation.op1, operation.op2, operation.out1);
+    break;
+  // r3 = true if r1 <= r2, else false
+  case OPERATION_CMP_LE:
+    printf("cmp_LE r%d, r%d -> r%d \n", operation.op1, operation.op2, operation.out1);
     break;
   // r3 = true if r1 == r2, else false
   case OPERATION_CMP_EQ:
     printf("cmp_EQ r%d, r%d -> r%d \n", operation.op1, operation.op2, operation.out1);
+    break;
+  // r3 = true if r1 != r2, else false
+  case OPERATION_CMP_NE:
+    printf("cmp_NE r%d, r%d -> r%d \n", operation.op1, operation.op2, operation.out1);
     break;
   // PC = address(l2) if r1 is true, else PC = address(l3)
   case OPERATION_CBR:
@@ -158,21 +158,21 @@ void map_operation_to_instruction(Operation operation)
   case OPERATION_LOADI:
     printf("loadI %d => r%d \n", operation.op1, operation.out1);
     break;
-  // r2 = Memory(rbss + c1)
-  case OPERATION_LOADAI_GLOBAL:
-    printf("loadAI rbss, %d => r%d \n", operation.op1, operation.out1);
-    break;
   // r2 = Memory(rfp + c1)
   case OPERATION_LOADAI_LOCAL:
     printf("loadAI rfp, %d => r%d \n", operation.op1, operation.out1);
     break;
-  // Memory(rbss + c1) = r1
-  case OPERATION_STOREAI_GLOBAL:
-    printf("storeAI r%d => rbss, %d \n", operation.op1, operation.out1);
+  // r2 = Memory(rbss + c1)
+  case OPERATION_LOADAI_GLOBAL:
+    printf("loadAI rbss, %d => r%d \n", operation.op1, operation.out1);
     break;
   // Memory(rfp + c1) = r1
   case OPERATION_STOREAI_LOCAL:
     printf("storeAI r%d => rfp, %d \n", operation.op1, operation.out1);
+    break;
+  // Memory(rbss + c1) = r1
+  case OPERATION_STOREAI_GLOBAL:
+    printf("storeAI r%d => rbss, %d \n", operation.op1, operation.out1);
     break;
   default:
     break;
