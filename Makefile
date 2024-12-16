@@ -4,11 +4,11 @@
 # /*      Henrique Vazatta     */
 # /*---------------------------*/
 
-ETAPA = 4
-DELIVERABLE_FILES = main.c ast.c ast.h lexical_value.c lexical_value.h symbol_table.c symbol_table.h common_types.h errors.h parser.y scanner.l Makefile README.md
+ETAPA = 5
+DELIVERABLE_FILES = main.c ast.c ast.h lexical_value.c lexical_value.h symbol_table.c symbol_table.h common_types.h errors.h iloc_generator.c iloc_generator.h parser.y scanner.l Makefile README.md
 
-all: bison flex main ast lexical_value symbol_table
-	gcc main.o lex.yy.o parser.tab.o lexical_value.o ast.o symbol_table.o -o etapa$(ETAPA)
+all: bison flex main ast lexical_value symbol_table iloc_generator
+	gcc main.o lex.yy.o parser.tab.o lexical_value.o ast.o symbol_table.o iloc_generator.o -o etapa$(ETAPA)
 
 bison:
 	bison -d parser.y
@@ -29,6 +29,9 @@ ast:
 
 symbol_table:
 	gcc -c symbol_table.c
+
+iloc_generator:
+	gcc -c iloc_generator.c
 
 deliverable:
 	make clean

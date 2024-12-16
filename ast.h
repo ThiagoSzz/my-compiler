@@ -10,6 +10,7 @@
 #include "lexical_value.h"
 #include "common_types.h"
 #include "symbol_table.h"
+#include "iloc_generator.h"
 
 // AST data structure
 typedef struct Node
@@ -19,6 +20,9 @@ typedef struct Node
   struct Node *brother;
   struct Node *child;
   struct Node *parent;
+  struct OperationList *operation_list;
+  int output_register;
+  int last_position;
 } Node;
 
 ////////////////////////////////////////////////

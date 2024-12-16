@@ -48,6 +48,8 @@ typedef struct SymbolTableItemValue
   DataType type;
   LexicalValue lexical_value;
   Parameter *parameters;
+  int position;
+  int is_global;
 } SymbolTableItemValue;
 
 typedef struct SymbolTableItem
@@ -61,12 +63,15 @@ typedef struct SymbolTable
   struct SymbolTableItem *items;
   int size;
   int max_size;
+  int last_position;
 } SymbolTable;
 
 typedef struct Stack
 {
   SymbolTable *symbol_table;
   struct Stack *next;
+  int is_global;
+  int last_position;
 } Stack;
 
 ////////////////////////////////////////////////

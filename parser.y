@@ -6,12 +6,14 @@
 
 %{
   #include "common_types.h"
+  #include <stdlib.h>
 
   int yylex(void);
   void yyerror (char const *mensagem);
   int get_line_number();
 
   DataType data_type = DATA_TYPE_UNDECLARED;
+  struct Node* main_function_scope = NULL;
 %}
 
 %code requires {
@@ -20,6 +22,7 @@
   #include "ast.h"
   #include "lexical_value.h"
   #include "symbol_table.h"
+  #include "iloc_generator.h"
 
   extern Node *tree;
   extern Stack *stack;
@@ -101,7 +104,7 @@
 program:
   start_program list_of_functions end_program
   {
-    $$ = $1;
+    $$ = $2;
     tree = $$;
   }
   | 
@@ -126,6 +129,11 @@ list_of_functions:
   {
     $$ = $1;
     add_child($$, $2);
+
+    if ($2) 
+    {
+      append_operation_list($$->operation_list, $2->operation_list);
+    }
   }
   | function
   {
@@ -165,6 +173,17 @@ literal:
     insert_value_into_stack(stack, value);
 
     $$ = create_node_from_value($1, value);
+
+    OperationList* operation_list = create_operation_list();
+
+    int c1 = atoi($1.label);
+    int r1 = get_register();
+
+    Operation operation = create_operation(OPERATION_LOADI, c1, -1, r1, -1);
+    insert_operation_into_list(operation_list, operation);
+
+    $$->output_register = r1;
+    $$->operation_list = operation_list;
   }
   | TK_LIT_FLOAT
   {
@@ -183,6 +202,16 @@ function: function_signature function_body
   {
     $$ = $1;
     add_child($$, $2);
+
+    if ($2)
+    {
+      $$->operation_list = $2->operation_list;
+    }
+
+    if (strncmp($1->lexical_value.label, "main", 4) == 0)
+    {
+      main_function_scope = $$;
+    }
   }
   ;
 
@@ -266,6 +295,15 @@ commands:
     {
       $$ = $1;
       add_child($$, $2);
+
+      if ($1->operation_list)
+      {
+        append_operation_list($1->operation_list, $2->operation_list);
+      }
+      else
+      {
+        $$->operation_list = $2->operation_list;
+      }
     }
     else
     {
@@ -369,6 +407,26 @@ variable_assignment: TK_IDENTIFICADOR '=' expression
     $$ = create_node_from_inferred_type($2, identifier, $3);
     add_child($$, identifier);
     add_child($$, $3);
+
+    OperationList* operation_list = insert_new_operation_list($3->operation_list);
+
+    int address = value.position;
+    int r1 = $3->output_register;
+
+    Operation operation;
+    
+    if (value.is_global)
+    {
+      operation = create_operation(OPERATION_STOREAI_GLOBAL, r1, -1, address, -1);
+    }
+    else
+    {
+      operation = create_operation(OPERATION_STOREAI_LOCAL, r1, -1, address, -1);
+    }
+
+    insert_operation_into_list(operation_list, operation);
+
+    $$->operation_list = operation_list;
   }
   ;
 
@@ -432,6 +490,37 @@ if_else_statement:
     add_child($$, $3);
     add_child($$, $5);
     free_lexical_value($2);
+
+    int expression_register = $3->output_register;
+    int if_false_register = get_register();
+    int cmp_register = get_register();
+
+    int if_true_label = get_label();
+    int if_false_label = get_label();
+
+    OperationList* operation_list = insert_new_operation_list($3->operation_list);
+
+    Operation if_false_operation = create_operation(OPERATION_LOADI, 0, -1, if_false_register, -1);
+    insert_operation_into_list(operation_list, if_false_operation);
+
+    Operation cmp_operation = create_operation(OPERATION_CMP_NE, expression_register, if_false_register, cmp_register, -1);
+    insert_operation_into_list(operation_list, cmp_operation);
+
+    Operation branch_operation = create_operation(OPERATION_CBR, cmp_register, -1, if_true_label, if_false_label);
+    insert_operation_into_list(operation_list, branch_operation);
+
+    Operation if_true_nop_operation = create_operation_from_type_and_label(OPERATION_NOP, if_true_label);
+    insert_operation_into_list(operation_list, if_true_nop_operation);
+
+    if ($5)
+    {
+      append_operation_list(operation_list, $5->operation_list);
+    }
+
+    Operation if_false_nop_operation = create_operation_from_type_and_label(OPERATION_NOP, if_false_label);
+    insert_operation_into_list(operation_list, if_false_nop_operation);
+
+    $$->operation_list = operation_list;
   }
   | TK_PR_IF '(' expression end_if_else_statement block TK_PR_ELSE block
   {
@@ -441,6 +530,49 @@ if_else_statement:
     add_child($$, $7);
     free_lexical_value($2);
     free_lexical_value($6);
+
+    int expression_register = $3->output_register;
+    int if_false_register = get_register();
+    int cmp_register = get_register();
+
+    int if_true_label = get_label();
+    int if_false_label = get_label();
+    int end_if_label = get_label();
+
+    OperationList* operation_list = insert_new_operation_list($3->operation_list);
+
+    Operation if_false_operation = create_operation(OPERATION_LOADI, 0, -1, if_false_register, -1);
+    insert_operation_into_list(operation_list, if_false_operation);
+
+    Operation cmp_operation = create_operation(OPERATION_CMP_NE, expression_register, if_false_register, cmp_register, -1);
+    insert_operation_into_list(operation_list, cmp_operation);
+
+    Operation branch_operation = create_operation(OPERATION_CBR, cmp_register, -1, if_true_label, if_false_label);
+    insert_operation_into_list(operation_list, branch_operation);
+
+    Operation if_true_nop_operation = create_operation_from_type_and_label(OPERATION_NOP, if_true_label);
+    insert_operation_into_list(operation_list, if_true_nop_operation);
+
+    if ($5)
+    {
+      append_operation_list(operation_list, $5->operation_list);
+    }
+    Operation end_loop_operation = create_operation(OPERATION_JUMPI, end_if_label, -1, -1, -1);
+    insert_operation_into_list(operation_list, end_loop_operation);
+
+    Operation if_false_nop_operation = create_operation_from_type_and_label(OPERATION_NOP, if_false_label);
+    insert_operation_into_list(operation_list, if_false_nop_operation);
+
+    if ($7)
+    {
+      append_operation_list(operation_list, $7->operation_list);
+    }    
+
+    Operation end_if_nop_operation = create_operation_from_type(OPERATION_NOP);
+    end_if_nop_operation.label = end_if_label;
+    insert_operation_into_list(operation_list, end_if_nop_operation);
+
+    $$->operation_list = operation_list;
   }
   ;
 
@@ -459,6 +591,45 @@ while_statement: TK_PR_WHILE '(' expression end_while_statement block
     add_child($$, $3);
     add_child($$, $5);
     free_lexical_value($2);
+
+    int expression_register = $3->output_register;
+    int if_false_register = get_register();
+    int cmp_register = get_register();
+
+    int loop_comparison_label = get_label();
+    int if_true_label = get_label();
+    int if_false_label = get_label();
+
+    OperationList* operation_list = create_operation_list();
+
+    Operation if_false_operation = create_operation(OPERATION_LOADI, 0, -1, if_false_register, -1);
+    insert_operation_into_list(operation_list, if_false_operation);
+
+    Operation end_loop_comparison_operation = create_operation_from_type_and_label(OPERATION_NOP, loop_comparison_label);
+    insert_operation_into_list(operation_list, end_loop_comparison_operation);
+
+    append_operation_list(operation_list, $3->operation_list);
+
+    Operation cmp_operation = create_operation(OPERATION_CMP_NE, expression_register, if_false_register, cmp_register, -1);
+    insert_operation_into_list(operation_list, cmp_operation);
+    Operation branch_operation = create_operation(OPERATION_CBR, cmp_register, -1, if_true_label, if_false_label);
+    insert_operation_into_list(operation_list, branch_operation);
+    
+    Operation if_true_nop_operation = create_operation_from_type_and_label(OPERATION_NOP, if_true_label);
+    insert_operation_into_list(operation_list, if_true_nop_operation);
+
+    if ($5)
+    {
+      append_operation_list(operation_list, $5->operation_list);
+    }
+    
+    Operation end_loop_operation = create_operation(OPERATION_JUMPI, loop_comparison_label, -1, -1, -1);
+    insert_operation_into_list(operation_list, end_loop_operation);
+
+    Operation if_false_nop_operation = create_operation_from_type_and_label(OPERATION_NOP, if_false_label);
+    insert_operation_into_list(operation_list, if_false_nop_operation);
+
+    $$->operation_list = operation_list;
   }
   ;
 
@@ -486,6 +657,18 @@ precedence_8_operators:
     $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
+
+    OperationList* operation_list = merge_operation_list($1->operation_list, $3->operation_list);
+
+    int r1 = $1->output_register;
+    int r2 = $3->output_register;
+    int r3 = get_register();
+
+    Operation operation = create_operation(OPERATION_OR, r1, r2, r3, -1);
+    insert_operation_into_list(operation_list, operation);
+
+    $$->output_register = r3;
+    $$->operation_list = operation_list;
   }
   | precedence_7_operators
   {
@@ -499,6 +682,18 @@ precedence_7_operators:
     $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
+    
+    OperationList* operation_list = merge_operation_list($1->operation_list, $3->operation_list);
+
+    int r1 = $1->output_register;
+    int r2 = $3->output_register;
+    int r3 = get_register();
+
+    Operation operation = create_operation(OPERATION_AND, r1, r2, r3, -1);
+    insert_operation_into_list(operation_list, operation);
+
+    $$->output_register = r3;
+    $$->operation_list = operation_list;
   }
   | precedence_6_operators
   {
@@ -512,12 +707,72 @@ precedence_6_operators:
     $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
+    
+    OperationList* operation_list = merge_operation_list($1->operation_list, $3->operation_list);
+
+    int r1 = $1->output_register;
+    int r2 = $3->output_register;
+    int r3 = get_register();
+    int r4 = get_register();
+    int if_true_label = get_label();
+    int if_false_label = get_label();
+    int end_if_label = get_label();
+
+    Operation cmp_eq_operation = create_operation(OPERATION_CMP_EQ, r1, r2, r3, -1);
+    insert_operation_into_list(operation_list, cmp_eq_operation);
+
+    Operation branch_operation = create_operation(OPERATION_CBR, r3, -1, if_true_label, if_false_label);
+    insert_operation_into_list(operation_list, branch_operation);
+
+    Operation if_true_operation = create_operation_from_label(OPERATION_LOADI, if_true_label, 1, -1, r4, -1);
+    Operation jump_if_true_operation = create_operation(OPERATION_JUMPI, end_if_label, -1, -1, -1);
+    insert_operation_into_list(operation_list, if_true_operation);
+    insert_operation_into_list(operation_list, jump_if_true_operation);
+
+    Operation if_false_operation = create_operation_from_label(OPERATION_LOADI, if_false_label, 0, -1, r4, -1);
+    insert_operation_into_list(operation_list, if_false_operation);
+
+    Operation nop_operation = create_operation_from_type_and_label(OPERATION_NOP, end_if_label);
+    insert_operation_into_list(operation_list, nop_operation);
+
+    $$->output_register = r4;
+    $$->operation_list = operation_list;
   }
   | precedence_6_operators TK_OC_NE precedence_5_operators
   {
     $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
+    
+    OperationList* operation_list = merge_operation_list($1->operation_list, $3->operation_list);
+
+    int r1 = $1->output_register;
+    int r2 = $3->output_register;
+    int r3 = get_register();
+    int r4 = get_register();
+    int if_true_label = get_label();
+    int if_false_label = get_label();
+    int end_if_label = get_label();
+
+    Operation cmp_ne_operation = create_operation(OPERATION_CMP_NE, r1, r2, r3, -1);
+    insert_operation_into_list(operation_list, cmp_ne_operation);
+
+    Operation branch_operation = create_operation(OPERATION_CBR, r3, -1, if_true_label, if_false_label);
+    insert_operation_into_list(operation_list, branch_operation);
+
+    Operation if_true_operation = create_operation_from_label(OPERATION_LOADI, if_true_label, 1, -1, r4, -1);
+    Operation jump_if_true_operation = create_operation(OPERATION_JUMPI, end_if_label, -1, -1, -1);
+    insert_operation_into_list(operation_list, if_true_operation);
+    insert_operation_into_list(operation_list, jump_if_true_operation);
+
+    Operation if_false_operation = create_operation_from_label(OPERATION_LOADI, if_false_label, 0, -1, r4, -1);
+    insert_operation_into_list(operation_list, if_false_operation);
+
+    Operation nop_operation = create_operation_from_type_and_label(OPERATION_NOP, end_if_label);
+    insert_operation_into_list(operation_list, nop_operation);
+
+    $$->output_register = r4;
+    $$->operation_list = operation_list;
   }
   | precedence_5_operators
   {
@@ -531,24 +786,144 @@ precedence_5_operators:
     $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
+    
+    OperationList* operation_list = merge_operation_list($1->operation_list, $3->operation_list);
+
+    int r1 = $1->output_register;
+    int r2 = $3->output_register;
+    int r3 = get_register();
+    int r4 = get_register();
+    int if_true_label = get_label();
+    int if_false_label = get_label();
+    int end_if_label = get_label();
+
+    Operation cmp_lt_operation = create_operation(OPERATION_CMP_LT, r1, r2, r3, -1);
+    insert_operation_into_list(operation_list, cmp_lt_operation);
+
+    Operation branch_operation = create_operation(OPERATION_CBR, r3, -1, if_true_label, if_false_label);
+    insert_operation_into_list(operation_list, branch_operation);
+
+    Operation if_true_operation = create_operation_from_label(OPERATION_LOADI, if_true_label, 1, -1, r4, -1);
+    Operation jump_if_true_operation = create_operation(OPERATION_JUMPI, end_if_label, -1, -1, -1);
+    insert_operation_into_list(operation_list, if_true_operation);
+    insert_operation_into_list(operation_list, jump_if_true_operation);
+
+    Operation if_false_operation = create_operation_from_label(OPERATION_LOADI, if_false_label, 0, -1, r4, -1);
+    insert_operation_into_list(operation_list, if_false_operation);
+
+    Operation nop_operation = create_operation_from_type_and_label(OPERATION_NOP, end_if_label);
+    insert_operation_into_list(operation_list, nop_operation);
+
+    $$->output_register = r4;
+    $$->operation_list = operation_list;
   }
   | precedence_5_operators '>' precedence_4_operators
   {
     $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
+    
+    OperationList* operation_list = merge_operation_list($1->operation_list, $3->operation_list);
+
+    int r1 = $1->output_register;
+    int r2 = $3->output_register;
+    int r3 = get_register();
+    int r4 = get_register();
+    int if_true_label = get_label();
+    int if_false_label = get_label();
+    int end_if_label = get_label();
+
+    Operation cmp_gt_operation = create_operation(OPERATION_CMP_GT, r1, r2, r3, -1);
+    insert_operation_into_list(operation_list, cmp_gt_operation);
+
+    Operation branch_operation = create_operation(OPERATION_CBR, r3, -1, if_true_label, if_false_label);
+    insert_operation_into_list(operation_list, branch_operation);
+
+    Operation if_true_operation = create_operation_from_label(OPERATION_LOADI, if_true_label, 1, -1, r4, -1);
+    Operation jump_if_true_operation = create_operation(OPERATION_JUMPI, end_if_label, -1, -1, -1);
+    insert_operation_into_list(operation_list, if_true_operation);
+    insert_operation_into_list(operation_list, jump_if_true_operation);
+
+    Operation if_false_operation = create_operation_from_label(OPERATION_LOADI, if_false_label, 0, -1, r4, -1);
+    insert_operation_into_list(operation_list, if_false_operation);
+
+    Operation nop_operation = create_operation_from_type_and_label(OPERATION_NOP, end_if_label);
+    insert_operation_into_list(operation_list, nop_operation);
+
+    $$->output_register = r4;
+    $$->operation_list = operation_list;
   }
   | precedence_5_operators TK_OC_LE precedence_4_operators
   {
     $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
+    
+    OperationList* operation_list = merge_operation_list($1->operation_list, $3->operation_list);
+
+    int r1 = $1->output_register;
+    int r2 = $3->output_register;
+    int r3 = get_register();
+    int r4 = get_register();
+    int if_true_label = get_label();
+    int if_false_label = get_label();
+    int end_if_label = get_label();
+
+    Operation cmp_le_operation = create_operation(OPERATION_CMP_LE, r1, r2, r3, -1);
+    insert_operation_into_list(operation_list, cmp_le_operation);
+
+    Operation branch_operation = create_operation(OPERATION_CBR, r3, -1, if_true_label, if_false_label);
+    insert_operation_into_list(operation_list, branch_operation);
+
+    Operation if_true_operation = create_operation_from_label(OPERATION_LOADI, if_true_label, 1, -1, r4, -1);
+    Operation jump_if_true_operation = create_operation(OPERATION_JUMPI, end_if_label, -1, -1, -1);
+    insert_operation_into_list(operation_list, if_true_operation);
+    insert_operation_into_list(operation_list, jump_if_true_operation);
+
+    Operation if_false_operation = create_operation_from_label(OPERATION_LOADI, if_false_label, 0, -1, r4, -1);
+    insert_operation_into_list(operation_list, if_false_operation);
+
+    Operation nop_operation = create_operation_from_type_and_label(OPERATION_NOP, end_if_label);
+    insert_operation_into_list(operation_list, nop_operation);
+
+    $$->output_register = r4;
+    $$->operation_list = operation_list;
   }
   | precedence_5_operators TK_OC_GE precedence_4_operators
   {
     $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
+    
+    OperationList* operation_list = merge_operation_list($1->operation_list, $3->operation_list);
+
+    int r1 = $1->output_register;
+    int r2 = $3->output_register;
+    int r3 = get_register();
+    int r4 = get_register();
+    int if_true_label = get_label();
+    int if_false_label = get_label();
+    int end_if_label = get_label();
+
+    Operation cmp_ge_operation = create_operation(OPERATION_CMP_GE, r1, r2, r3, -1);
+    insert_operation_into_list(operation_list, cmp_ge_operation);
+
+    Operation branch_operation = create_operation(OPERATION_CBR, r3, -1, if_true_label, if_false_label);
+    insert_operation_into_list(operation_list, branch_operation);
+
+    Operation if_true_operation = create_operation_from_label(OPERATION_LOADI, if_true_label, 1, -1, r4, -1);
+    Operation jump_if_true_operation = create_operation(OPERATION_JUMPI, end_if_label, -1, -1, -1);
+    insert_operation_into_list(operation_list, if_true_operation);
+    insert_operation_into_list(operation_list, jump_if_true_operation);
+
+    Operation if_false_operation = create_operation_from_label(OPERATION_LOADI, if_false_label, 0, -1, r4, -1);
+    insert_operation_into_list(operation_list, if_false_operation);
+
+    Operation nop_operation = create_operation_from_type_and_label(OPERATION_NOP, end_if_label);
+    insert_operation_into_list(operation_list, nop_operation);
+
+    $$->output_register = r4;
+    $$->operation_list = operation_list;
   }
   | precedence_4_operators
   {
@@ -562,12 +937,36 @@ precedence_4_operators:
     $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
+    
+    OperationList* operation_list = merge_operation_list($1->operation_list, $3->operation_list);
+
+    int r1 = $1->output_register;
+    int r2 = $3->output_register;
+    int r3 = get_register();
+
+    Operation add_operation = create_operation(OPERATION_ADD, r1, r2, r3, -1);
+    insert_operation_into_list(operation_list, add_operation);
+
+    $$->output_register = r3;
+    $$->operation_list = operation_list;
   }
   | precedence_4_operators '-' precedence_3_operators
   {
     $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
+    
+    OperationList* operation_list = merge_operation_list($1->operation_list, $3->operation_list);
+
+    int r1 = $1->output_register;
+    int r2 = $3->output_register;
+    int r3 = get_register();
+
+    Operation sub_operation = create_operation(OPERATION_SUB, r1, r2, r3, -1);
+    insert_operation_into_list(operation_list, sub_operation);
+
+    $$->output_register = r3;
+    $$->operation_list = operation_list;
   }
   | precedence_3_operators
   {
@@ -581,12 +980,36 @@ precedence_3_operators:
     $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
+    
+    OperationList* operation_list = merge_operation_list($1->operation_list, $3->operation_list);
+
+    int r1 = $1->output_register;
+    int r2 = $3->output_register;
+    int r3 = get_register();
+
+    Operation mult_operation = create_operation(OPERATION_MULT, r1, r2, r3, -1);
+    insert_operation_into_list(operation_list, mult_operation);
+
+    $$->output_register = r3;
+    $$->operation_list = operation_list;
   }
   | precedence_3_operators '/' precedence_2_operators
   {
     $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
+    
+    OperationList* operation_list = merge_operation_list($1->operation_list, $3->operation_list);
+
+    int r1 = $1->output_register;
+    int r2 = $3->output_register;
+    int r3 = get_register();
+
+    Operation div_operation = create_operation(OPERATION_DIV, r1, r2, r3, -1);
+    insert_operation_into_list(operation_list, div_operation);
+
+    $$->output_register = r3;
+    $$->operation_list = operation_list;
   }
   | precedence_3_operators '%' precedence_2_operators
   {
@@ -605,11 +1028,33 @@ precedence_2_operators:
   {
     $$ = create_node_from_child_type($1, $2);
     add_child($$, $2);
+    
+    OperationList* operation_list = insert_new_operation_list($2->operation_list);
+
+    int r1 = $2->output_register;
+    int r2 = get_register();
+
+    Operation neg_operation = create_operation(OPERATION_NEG, r1, -1, r2, -1);
+    insert_operation_into_list(operation_list, neg_operation);
+
+    $$->output_register = r2;
+    $$->operation_list = operation_list;
   }
   | '!' operand
   {
     $$ = create_node_from_child_type($1, $2);
     add_child($$, $2);
+    
+    OperationList* operation_list = insert_new_operation_list($2->operation_list);
+
+    int r1 = $2->output_register;
+    int r2 = get_register();
+
+    Operation not_operation = create_operation(OPERATION_NOT, r1, -1, r2, -1);
+    insert_operation_into_list(operation_list, not_operation);
+
+    $$->output_register = r2;
+    $$->operation_list = operation_list;
   }
   | operand
   {
@@ -624,6 +1069,27 @@ operand:
     validate_variable_use(value, $1);
 
     $$ = create_node_from_type($1, value.type);
+    
+    OperationList* operation_list = create_operation_list();
+
+    int address = value.position;
+    int r1 = get_register();
+
+    Operation operation;
+    
+    if (value.is_global)
+    {
+      operation = create_operation(OPERATION_LOADAI_GLOBAL, address, -1, r1, -1);
+    }
+    else
+    {
+      operation = create_operation(OPERATION_LOADAI_LOCAL, address, -1, r1, -1);
+    }
+
+    insert_operation_into_list(operation_list, operation);
+
+    $$->output_register = r1;
+    $$->operation_list = operation_list;
   }
   | literal
   {

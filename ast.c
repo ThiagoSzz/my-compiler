@@ -19,6 +19,8 @@ Node *create_node(LexicalValue lexical_value, DataType data_type)
   node->brother = NULL;
   node->child = NULL;
   node->parent = NULL;
+  node->operation_list = NULL;
+  node->output_register = -1;
 
   return node;
 }
