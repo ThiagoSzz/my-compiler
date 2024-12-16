@@ -77,6 +77,8 @@ Operation create_operation(OperationsEnum type, int op1, int op2, int out1, int 
 
 Operation create_operation_from_label(OperationsEnum type, int label, int op1, int op2, int out1, int out2);
 
+OperationList *create_operation_list();
+
 ////////////////////////////////////////////////
 /* -->>        Generation Functions      <<-- */
 ////////////////////////////////////////////////
@@ -104,16 +106,10 @@ OperationList *generate_load_identifier_code(SymbolTableItemValue value, int *ou
 OperationList *generate_store_identifier_code(SymbolTableItemValue value, struct Node *expression_node);
 
 ////////////////////////////////////////////////
-/* -->>        Creation Functions        <<-- */
-////////////////////////////////////////////////
-
-OperationList *create_operation_list();
-
-OperationList *insert_new_operation_list(OperationList *operation_list);
-
-////////////////////////////////////////////////
 /* -->>        Insertion Functions       <<-- */
 ////////////////////////////////////////////////
+
+OperationList *insert_new_operation_list(OperationList *operation_list);
 
 void insert_operation_into_list(OperationList *operation_list, Operation operation);
 

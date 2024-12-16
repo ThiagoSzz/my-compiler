@@ -5,8 +5,9 @@
 /*---------------------------*/
 
 %{
-  #include "common_types.h"
   #include <stdlib.h>
+  
+  #include "common_types.h"
 
   int yylex(void);
   void yyerror (char const *mensagem);

@@ -60,6 +60,22 @@ Operation create_operation_from_label(OperationsEnum type, int label, int op1, i
   return operation;
 }
 
+// creates empty operation list
+OperationList *create_operation_list()
+{
+  OperationList *operation_list = malloc(sizeof(OperationList));
+
+  if (!operation_list)
+  {
+    printf("failed to create operation list\n");
+    return NULL;
+  }
+
+  operation_list->operation = create_operation_from_type(OPERATION_UNDEFINED);
+  operation_list->next_operation_list = NULL;
+  return operation_list;
+}
+
 // generates code for given operation via printf
 void map_operation_to_instruction(Operation operation)
 {
@@ -432,22 +448,6 @@ OperationList *generate_store_identifier_code(SymbolTableItemValue value, struct
   return operation_list;
 }
 
-// creates empty operation list
-OperationList *create_operation_list()
-{
-  OperationList *operation_list = malloc(sizeof(OperationList));
-
-  if (!operation_list)
-  {
-    printf("failed to create operation list\n");
-    return NULL;
-  }
-
-  operation_list->operation = create_operation_from_type(OPERATION_UNDEFINED);
-  operation_list->next_operation_list = NULL;
-  return operation_list;
-}
-
 // inserts new operation list into existing one
 OperationList *insert_new_operation_list(OperationList *operation_list)
 {
@@ -519,7 +519,7 @@ OperationList *merge_operation_list(OperationList *current_list, OperationList *
   return new_operation_list;
 }
 
-// frees operation list
+// free operation list
 void free_operation_list(OperationList *operation_list)
 {
   OperationList *current_list = operation_list;
