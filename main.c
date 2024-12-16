@@ -5,7 +5,6 @@
 
 extern int yyparse(void);
 extern int yylex_destroy(void);
-extern struct Node *main_function_scope;
 
 Node *tree;
 Stack *stack;
