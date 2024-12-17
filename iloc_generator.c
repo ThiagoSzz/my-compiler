@@ -67,7 +67,6 @@ OperationList *create_operation_list()
 
   if (!operation_list)
   {
-    printf("failed to create operation list\n");
     return NULL;
   }
 
@@ -470,7 +469,6 @@ void insert_operation_into_list(OperationList *operation_list, Operation operati
 {
   if (operation_list == NULL)
   {
-    printf("failed to insert because operation list is empty\n");
     return;
   }
 
@@ -490,7 +488,6 @@ void append_operation_list(OperationList *current_list, OperationList *new_list)
 {
   if (current_list == NULL || new_list == NULL)
   {
-    printf("failed to append because operation list is empty\n");
     return;
   }
 
@@ -507,7 +504,6 @@ OperationList *merge_operation_list(OperationList *current_list, OperationList *
 {
   if (current_list == NULL || new_list == NULL)
   {
-    printf("failed to merge because operation list is empty\n");
     return NULL;
   }
 
