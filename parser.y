@@ -682,14 +682,14 @@ precedence_2_operators:
     $$ = create_node_from_child_type($1, $2);
     add_child($$, $2);
     
-    $$->operation_list = generate_unary_expression_code(OPERATION_NEG, $2, &($$->output_register));
+    $$->operation_list = generate_arithmetic_negation_expression_code($2, &($$->output_register));
   }
   | '!' operand
   {
     $$ = create_node_from_child_type($1, $2);
     add_child($$, $2);
     
-    $$->operation_list = generate_unary_expression_code(OPERATION_NOT, $2, &($$->output_register));
+    $$->operation_list = generate_logical_negation_expression_code($2, &($$->output_register));
   }
   | operand
   {

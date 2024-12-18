@@ -93,7 +93,9 @@ OperationList *generate_if_else_statement_code(struct Node *expression_node, str
 
 OperationList *generate_while_statement_code(struct Node *expression_node, struct Node *block_node);
 
-OperationList *generate_unary_expression_code(OperationsEnum operation_type, struct Node *node, int *output_register);
+OperationList *generate_arithmetic_negation_expression_code(struct Node *node, int *output_register);
+
+OperationList *generate_logical_negation_expression_code(struct Node *node, int *output_register);
 
 OperationList *generate_binary_expression_code(OperationsEnum operation_type, struct Node *left_node, struct Node *right_node, int *output_register);
 
