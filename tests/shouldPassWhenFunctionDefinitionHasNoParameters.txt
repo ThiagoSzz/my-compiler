@@ -1,4 +1,0 @@
-//PASS
-main => int {
-  return 0;
-}

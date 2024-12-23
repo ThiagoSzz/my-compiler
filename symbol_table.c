@@ -18,6 +18,8 @@ void init_stack()
 
   SymbolTable *global_symbol_table = create_symbol_table();
   stack = insert_table_into_stack(stack, global_symbol_table);
+  stack->is_global = 1;
+  stack->last_position = 0;
 }
 
 // create and initialize symbol table
@@ -33,6 +35,7 @@ SymbolTable *create_symbol_table()
   symbol_table->size = 0;
   symbol_table->max_size = SYMBOL_TABLE_MAX_SIZE;
   symbol_table->items = (SymbolTableItem *)calloc(symbol_table->max_size, sizeof(SymbolTableItem));
+  symbol_table->last_position = 0;
 
   if (!symbol_table->items)
   {
@@ -56,6 +59,8 @@ Stack *create_symbol_table_stack()
 
   stack->symbol_table = NULL;
   stack->next = NULL;
+  stack->is_global = 0;
+  stack->last_position = 0;
 
   return stack;
 }
@@ -77,6 +82,16 @@ Stack *insert_table_into_stack(Stack *current_first_table, SymbolTable *symbol_t
   new_first_table->symbol_table = symbol_table;
   new_first_table->next = current_first_table;
 
+  if (stack->is_global)
+  {
+    new_first_table->last_position = 0;
+  }
+  else
+  {
+    symbol_table->last_position = stack->last_position;
+    new_first_table->last_position = stack->last_position;
+  }
+
   return new_first_table;
 }
 
@@ -95,6 +110,21 @@ void insert_value_into_stack(Stack *stack, SymbolTableItemValue value)
     printf("failed to add item value to stack, label is not initialized");
     return;
   }
+
+  value.is_global = stack->is_global;
+  value.position = table->last_position;
+
+  value.is_global = stack->is_global;
+  if (value.nature == SYMBOL_NATURE_VARIABLE || value.nature == SYMBOL_NATURE_FUNCTION)
+  {
+    value.position = table->last_position;
+    table->last_position += sizeof(int);
+  }
+  else
+  {
+    value.position = -1;
+  }
+  stack->last_position = table->last_position;
 
   validate_variable_declaration(stack, value.lexical_value);
 

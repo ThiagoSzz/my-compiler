@@ -1,7 +1,0 @@
-//FAIL
-main => int {
-  int var_a <= 2;
-  float var_b <= var_a;
-  
-  return 0;
-}

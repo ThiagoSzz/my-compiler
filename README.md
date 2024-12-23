@@ -35,6 +35,13 @@ Project for a compiler made for a C-like language using [flex](https://github.co
 - Throws `ERR_UNDECLARED` (failed to use undeclared variable/function), `ERR_DECLARED` (failed to re-declare variable/function), `ERR_VARIABLE` (failed to use variable as a function call) and `ERR_FUNCTION` (failed to use function call as a variable) errors
 - Infers data types on expressions and variable assignments
 
+### Iterate 5: Code Generation
+
+- Creates the Operation List data structure
+- Builds the Operation List in the parser
+- Implements variable declaration address logic (rfp, rbss)
+- Generates code for if statements (with/without else), while statements, unary expressions (negation, logical not), comparison expressions (==, !=, <, >, <=, >=), arithmetic expressions (+, -, *, /), loading identifiers (global/local) and storing identifiers (global/local)
+
 ## How to execute
 
 ### Build
@@ -56,24 +63,6 @@ To run the compiler, execute the following command in terminal:
 ```
 > [!TIP]
 > You can run the compiler with an input file by using `./etapaX < filename` (e.g `./etapaX < input.txt`).
-
-### Test
-
-To test the compiler, you can use the `run_tests.sh` script. First, you might need to give executable permissions to it using:
-
-```bash
-chmod +x run_tests.sh
-```
-> [!NOTE]
-> This is only necessary for a linux-based OS/macOS.
-
-After that, you can run the script using:
-
-```bash
-sh run_tests.sh
-```
-
-The test script also runs automatically in a github action executed for each commit in a pull request.
 
 ### Clean
 

@@ -5,6 +5,8 @@
 /*---------------------------*/
 
 %{
+  #include <stdlib.h>
+  
   #include "common_types.h"
 
   int yylex(void);
@@ -12,6 +14,7 @@
   int get_line_number();
 
   DataType data_type = DATA_TYPE_UNDECLARED;
+  struct Node* main_function_scope = NULL;
 %}
 
 %code requires {
@@ -20,6 +23,7 @@
   #include "ast.h"
   #include "lexical_value.h"
   #include "symbol_table.h"
+  #include "iloc_generator.h"
 
   extern Node *tree;
   extern Stack *stack;
@@ -101,7 +105,7 @@
 program:
   start_program list_of_functions end_program
   {
-    $$ = $1;
+    $$ = $2;
     tree = $$;
   }
   | 
@@ -118,6 +122,11 @@ start_program:
 
 end_program:
   {
+    if (main_function_scope->operation_list != NULL)
+    {
+      generate_code(main_function_scope->operation_list);
+      free_operation_list(main_function_scope->operation_list);
+    }
     free_stack(stack);
   }
 
@@ -126,6 +135,11 @@ list_of_functions:
   {
     $$ = $1;
     add_child($$, $2);
+
+    if ($2) 
+    {
+      append_operation_list($$->operation_list, $2->operation_list);
+    }
   }
   | function
   {
@@ -165,6 +179,17 @@ literal:
     insert_value_into_stack(stack, value);
 
     $$ = create_node_from_value($1, value);
+
+    OperationList* operation_list = create_operation_list();
+
+    int c1 = atoi($1.label);
+    int r1 = get_register();
+
+    Operation operation = create_operation(OPERATION_LOADI, c1, -1, r1, -1);
+    insert_operation_into_list(operation_list, operation);
+
+    $$->output_register = r1;
+    $$->operation_list = operation_list;
   }
   | TK_LIT_FLOAT
   {
@@ -183,6 +208,16 @@ function: function_signature function_body
   {
     $$ = $1;
     add_child($$, $2);
+
+    if ($2)
+    {
+      $$->operation_list = $2->operation_list;
+    }
+
+    if (strncmp($1->lexical_value.label, "main", 4) == 0)
+    {
+      main_function_scope = $$;
+    }
   }
   ;
 
@@ -266,6 +301,15 @@ commands:
     {
       $$ = $1;
       add_child($$, $2);
+
+      if ($1->operation_list)
+      {
+        append_operation_list($1->operation_list, $2->operation_list);
+      }
+      else
+      {
+        $$->operation_list = $2->operation_list;
+      }
     }
     else
     {
@@ -369,6 +413,8 @@ variable_assignment: TK_IDENTIFICADOR '=' expression
     $$ = create_node_from_inferred_type($2, identifier, $3);
     add_child($$, identifier);
     add_child($$, $3);
+    
+    $$->operation_list = generate_store_identifier_code(value, $3);
   }
   ;
 
@@ -432,6 +478,8 @@ if_else_statement:
     add_child($$, $3);
     add_child($$, $5);
     free_lexical_value($2);
+
+    $$->operation_list = generate_if_statement_code($3, $5);
   }
   | TK_PR_IF '(' expression end_if_else_statement block TK_PR_ELSE block
   {
@@ -441,6 +489,8 @@ if_else_statement:
     add_child($$, $7);
     free_lexical_value($2);
     free_lexical_value($6);
+
+    $$->operation_list = generate_if_else_statement_code($3, $5, $7);
   }
   ;
 
@@ -459,6 +509,8 @@ while_statement: TK_PR_WHILE '(' expression end_while_statement block
     add_child($$, $3);
     add_child($$, $5);
     free_lexical_value($2);
+
+    $$->operation_list = generate_while_statement_code($3, $5);
   }
   ;
 
@@ -486,6 +538,8 @@ precedence_8_operators:
     $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
+    
+    $$->operation_list = generate_binary_expression_code(OPERATION_OR, $1, $3, &($$->output_register));
   }
   | precedence_7_operators
   {
@@ -499,6 +553,8 @@ precedence_7_operators:
     $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
+    
+    $$->operation_list = generate_binary_expression_code(OPERATION_AND, $1, $3, &($$->output_register));
   }
   | precedence_6_operators
   {
@@ -512,12 +568,16 @@ precedence_6_operators:
     $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
+    
+    $$->operation_list = generate_comparison_expression_code(OPERATION_CMP_EQ, $1, $3, &($$->output_register));
   }
   | precedence_6_operators TK_OC_NE precedence_5_operators
   {
     $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
+    
+    $$->operation_list = generate_comparison_expression_code(OPERATION_CMP_NE, $1, $3, &($$->output_register));
   }
   | precedence_5_operators
   {
@@ -531,24 +591,32 @@ precedence_5_operators:
     $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
+    
+     $$->operation_list = generate_comparison_expression_code(OPERATION_CMP_LT, $1, $3, &($$->output_register));
   }
   | precedence_5_operators '>' precedence_4_operators
   {
     $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
+
+    $$->operation_list = generate_comparison_expression_code(OPERATION_CMP_GT, $1, $3, &($$->output_register));
   }
   | precedence_5_operators TK_OC_LE precedence_4_operators
   {
     $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
+
+    $$->operation_list = generate_comparison_expression_code(OPERATION_CMP_LE, $1, $3, &($$->output_register));
   }
   | precedence_5_operators TK_OC_GE precedence_4_operators
   {
     $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
+
+    $$->operation_list = generate_comparison_expression_code(OPERATION_CMP_GE, $1, $3, &($$->output_register));
   }
   | precedence_4_operators
   {
@@ -562,12 +630,16 @@ precedence_4_operators:
     $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
+    
+    $$->operation_list = generate_arithmetic_expression_code(OPERATION_ADD, $1, $3, &($$->output_register));
   }
   | precedence_4_operators '-' precedence_3_operators
   {
     $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
+    
+    $$->operation_list = generate_arithmetic_expression_code(OPERATION_SUB, $1, $3, &($$->output_register));
   }
   | precedence_3_operators
   {
@@ -581,12 +653,16 @@ precedence_3_operators:
     $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
+    
+    $$->operation_list = generate_arithmetic_expression_code(OPERATION_MULT, $1, $3, &($$->output_register));
   }
   | precedence_3_operators '/' precedence_2_operators
   {
     $$ = create_node_from_inferred_type($2, $1, $3);
     add_child($$, $1);
     add_child($$, $3);
+    
+    $$->operation_list = generate_arithmetic_expression_code(OPERATION_DIV, $1, $3, &($$->output_register));
   }
   | precedence_3_operators '%' precedence_2_operators
   {
@@ -605,11 +681,15 @@ precedence_2_operators:
   {
     $$ = create_node_from_child_type($1, $2);
     add_child($$, $2);
+    
+    $$->operation_list = generate_arithmetic_negation_expression_code($2, &($$->output_register));
   }
   | '!' operand
   {
     $$ = create_node_from_child_type($1, $2);
     add_child($$, $2);
+    
+    $$->operation_list = generate_logical_negation_expression_code($2, &($$->output_register));
   }
   | operand
   {
@@ -624,6 +704,8 @@ operand:
     validate_variable_use(value, $1);
 
     $$ = create_node_from_type($1, value.type);
+    
+    $$->operation_list = generate_load_identifier_code(value, &($$->output_register));
   }
   | literal
   {
