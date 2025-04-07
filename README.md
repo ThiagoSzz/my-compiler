@@ -2,6 +2,8 @@
 
 Project for a compiler made for a C-like language using [flex](https://github.com/westes/flex), [bison](https://github.com/akimd/bison) and the C programming language with [gcc](https://github.com/gcc-mirror/gcc).
 
+For a detailed overview of what was added in each iterate, take a look at the closed [Pull Requests](https://github.com/ThiagoSzz/my-compiler/pulls?q=is%3Apr+is%3Aclosed).
+
 ## Features
 
 ### Iterate 1: Lexical Analysis
